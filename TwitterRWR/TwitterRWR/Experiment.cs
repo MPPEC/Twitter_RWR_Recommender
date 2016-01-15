@@ -84,7 +84,7 @@ namespace TweetRecommender
                         {
                             if (loader.checkEgoNetworkValidation() == false)
                                 return;
-                            cntLikes = loader.cntLikesOfEgoUser;
+                            cntLikes = loader.cntLikesOfEgoUser; // !!!Suspect Here
                         }
                         // #1 Core Part: 'EgoNetwork DB' --> 'Graph Structure(Node, Edge)'
                         loader.graphConfiguration(methodology, fold); 
