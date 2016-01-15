@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Recommenders.RWRBased 
+namespace TweetRecommender
 {
     public enum NodeType { UNDEFINED, USER, ITEM, ETC }
     public enum EdgeType { UNDEFINED, LIKE, FRIENDSHIP, FOLLOW, MENTION, AUTHORSHIP, PURCHASE, ETC }

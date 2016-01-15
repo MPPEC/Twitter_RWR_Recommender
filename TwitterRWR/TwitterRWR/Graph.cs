@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Recommenders.RWRBased 
+namespace TweetRecommender
 {
     public struct Node 
     {

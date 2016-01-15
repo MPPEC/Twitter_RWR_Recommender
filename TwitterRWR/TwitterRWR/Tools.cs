@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Recommenders {
+namespace TweetRecommender
+{ 
     public class Tools {
         public static void printExecutionTime(Stopwatch stopwatch) {
             var timespan = TimeSpan.FromMilliseconds(stopwatch.ElapsedMilliseconds);

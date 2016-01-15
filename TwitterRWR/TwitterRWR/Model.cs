@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 // Personalized PageRank Algorithm
-namespace Recommenders.RWRBased {
+namespace TweetRecommender
+{ 
     public class Model {
         public Graph graph;
         public double[] rank;

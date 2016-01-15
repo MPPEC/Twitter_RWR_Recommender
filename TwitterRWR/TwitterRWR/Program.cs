@@ -1,5 +1,4 @@
-﻿using Recommenders;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -27,6 +26,7 @@ namespace TweetRecommender
         // Existing experimental result: To SKIP already performed experiments
         public static Dictionary<long, List<int>> existingResults = new Dictionary<long, List<int>>(); // (<ego ID>, <{Experiments Codes}>)
 
+        // Command line argument: C:\Users\M-PEC\Desktop\sample 0,1 5 10
         public static void Main(string[] args) 
         {
             Console.WriteLine("RWR-based Recommendation (" + DateTime.Now.ToString() + ")\n");
