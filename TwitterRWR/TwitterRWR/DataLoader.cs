@@ -451,7 +451,7 @@ namespace TweetRecommender {
                     if (friendship.type == EdgeType.FRIENDSHIP)
                         nFriendhips += 1;
                 }
-                // Normalization
+                // Normalize weight of 'Mention type edge'
                 // Add link with the weight as much as mention frequency
                 if (sumLogMentionCount > 1) 
                 {
