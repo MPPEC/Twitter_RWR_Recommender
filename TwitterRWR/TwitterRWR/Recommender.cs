@@ -3,7 +3,7 @@
 namespace TweetRecommender
 {
     public enum NodeType { UNDEFINED, USER, ITEM, ETC }
-    public enum EdgeType { UNDEFINED, LIKE, FRIENDSHIP, FOLLOW, MENTION, AUTHORSHIP, PURCHASE, ETC }
+    public enum EdgeType { UNDEFINED, LIKE, FRIENDSHIP, FOLLOW, MENTION, AUTHORSHIP, PURCHASE, ETC } // Unnecessary: 'PURCHASE', 'ETC' 
 
     public class Recommender 
     {
