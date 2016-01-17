@@ -6,7 +6,7 @@ namespace TweetRecommender {
     public class DataLoader {
         // Ego user's ID
         private long egoUserId;
-        public int cntLikesOfEgoUser;
+        public int cntLikesOfEgoUser; // !!!: Necessary Variable???
 
         // Database adapter
         private SQLiteAdapter dbAdapter;
