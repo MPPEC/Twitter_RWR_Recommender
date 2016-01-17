@@ -367,10 +367,11 @@ namespace TweetRecommender {
             {
                 // Node index of given member
                 int idxMember = userIDs[memberId];
-
+                // Followees of given member
                 HashSet<long> followees = dbAdapter.getFollowingUsers(memberId);
                 foreach (long followee in followees) 
                 {
+                    // !!! Suspicious Part: No guarantee 'friend' relation betweetn a given member and his followee
                     if (memberIDs.ContainsKey(followee)) 
                     {
                         if (inclFriendShip) 
