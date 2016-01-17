@@ -300,14 +300,14 @@ namespace TweetRecommender {
                 {
                     // Split ego user's like history into two
                     var data = splitLikeHistory(likes, fold);
-                    foreach (long tweet in data.Key) 
-                    {               // data.Key: training set of like history
+                    foreach (long tweet in data.Key) // data.Key: train set of like history
+                    {               
                         addTweetNode(tweet, NodeType.ITEM);
                         addLink(idxMember, tweetIDs[tweet], EdgeType.LIKE, 1);
                         addLink(tweetIDs[tweet], idxMember, EdgeType.LIKE, 1);
                     }
                     
-                    // Set test set: !!! Suspicous Error Part
+                    // Set test set(like history not in train set)
                     testSet = data.Value;
                 } 
                 else 
