@@ -79,6 +79,7 @@ namespace TweetRecommender
                     {
                         // Load graph information from database and then configurate the graph
                         DataLoader loader = new DataLoader(dbFile, nFolds);
+                        // !!!: Right below block may be useless
                         if (fold == 0) 
                         {
                             if (loader.checkEgoNetworkValidation() == false)
