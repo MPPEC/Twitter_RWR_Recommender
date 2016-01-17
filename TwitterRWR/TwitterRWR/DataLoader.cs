@@ -307,12 +307,12 @@ namespace TweetRecommender {
                         addLink(tweetIDs[tweet], idxMember, EdgeType.LIKE, 1);
                     }
                     
-                    // Set test set: !!! Suspicous Error Part:
+                    // Set test set: !!! Suspicous Error Part
                     testSet = data.Value;
                 } 
                 else 
                 {
-                    foreach (long tweet in likes)
+                    foreach (long tweet in likes) // Maek 'edges' between user and liked tweets
                     {
                         addTweetNode(tweet, NodeType.ITEM);
                         addLink(idxMember, tweetIDs[tweet], EdgeType.LIKE, 1);
