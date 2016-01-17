@@ -13,8 +13,8 @@ namespace TweetRecommender {
         private SQLiteAdapter dbAdapter;
 
         // Graph information
-        private int nNodes = 0; // # of all nodes
-        private int nLinks = 0; // # of all links
+        private int nNodes = 0; // # of all nodes(equal to last node index)
+        private int nLinks = 0; // # of all links(equal to last link index)
         public Dictionary<int, Node> allNodes = new Dictionary<int, Node>(); // <Node Index, Node Object>, 'Node' defined in 'graph.cs'
         public Dictionary<int, List<ForwardLink>> allLinks = new Dictionary<int, List<ForwardLink>>(); // <Node Index, Out Links List>
 
