@@ -83,7 +83,7 @@ namespace TweetRecommender {
                 nLinks += 1;
             }
         }
-//!!!: Maybe useless method
+// !!!: Maybe useless method
         public bool checkEgoNetworkValidation() 
         {
             int cntLikes = getLikeCountOfEgoUser();
@@ -118,7 +118,7 @@ namespace TweetRecommender {
             cntLikesOfEgoUser = likes.Count;
             return likes.Count;
         }
-
+// !!!: Maybe useless method
         public int getFriendsCountOfEgoUser() 
         {
             // Get friends of ego network
