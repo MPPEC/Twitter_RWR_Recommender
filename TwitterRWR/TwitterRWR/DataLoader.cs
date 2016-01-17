@@ -260,10 +260,11 @@ namespace TweetRecommender {
             // Add ego user's node
             addUserNode(egoUserId, NodeType.USER);
 
-            // Get members of ego network
+            // Get all friends(also follow ego) in ego-network
             HashSet<long> followeesOfEgoUser = dbAdapter.getFollowingUsers(egoUserId);
             foreach (long followee in followeesOfEgoUser) 
             {
+                // Only 'Friends'
                 HashSet<long> followeesOfFollowee = dbAdapter.getFollowingUsers(followee);
                 if (followeesOfFollowee.Contains(egoUserId))
                     addUserNode(followee, NodeType.USER);
