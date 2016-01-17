@@ -216,8 +216,8 @@ namespace TweetRecommender {
         // #2 Main Part
         public void graphConfiguration(List<Feature> features, int fold) 
         {
-            // Synchronization: Mutex(locker)
-            lock (Program.locker) 
+            // Display all features used in graph
+            lock (Program.locker) // Synchronization: Mutex(locker)
             {
                 Console.Write("Graph Configuration(" + egoUserId + ": Fold #" + (fold + 1) + "/" + nFolds + ") - ");
                 foreach (Feature feature in features)
