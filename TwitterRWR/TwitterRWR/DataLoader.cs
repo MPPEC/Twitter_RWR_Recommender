@@ -329,7 +329,7 @@ namespace TweetRecommender {
             List<long> likesList = new List<long>();
             foreach (long like in likes)
                 likesList.Add(like);
-            likesList.Sort(); // ??: Tweet ID propotional to Timestamp 
+            likesList.Sort(); // Tweet ID propotional to Timestamp(Snowflake Algorithm in Twitter)
 
             HashSet<long> trainSet = new HashSet<long>();
             HashSet<long> testSet = new HashSet<long>();
