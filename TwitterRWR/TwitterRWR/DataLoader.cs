@@ -83,7 +83,7 @@ namespace TweetRecommender {
                 nLinks += 1;
             }
         }
-
+//!!!: Maybe useless method
         public bool checkEgoNetworkValidation() 
         {
             int cntLikes = getLikeCountOfEgoUser();
