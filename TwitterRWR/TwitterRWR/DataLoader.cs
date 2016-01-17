@@ -43,7 +43,7 @@ namespace TweetRecommender {
                 allNodes.Add(nNodes, node); // nNodes plays as 'node index'
                 userIDs.Add(id, nNodes);
                 if (type == NodeType.USER)
-                    memberIDs.Add(id, nNodes); // member: egoUser & followee
+                    memberIDs.Add(id, nNodes); // member: egoUser & friends
                 else
                     thirdPartyIDs.Add(id, nNodes); // thirdParty: user out of ego network
                 nNodes += 1;
@@ -213,6 +213,7 @@ namespace TweetRecommender {
             // Close database connection
             dbAdapter.closeDB();
         }
+        
         // #2 Main Part
         public void graphConfiguration(List<Feature> features, int fold) 
         {
@@ -254,6 +255,7 @@ namespace TweetRecommender {
             // Print out the graph information
             printGraphInfo();
         }
+        
         // Member = ego U ego's friends
         public void addMemberNodes() 
         {
@@ -317,6 +319,7 @@ namespace TweetRecommender {
                 }
             }
         }
+        
         // K-fold 'TrainSet', 'TestSet'
         public KeyValuePair<HashSet<long>, HashSet<long>> // 'KeyValuePair' is used for multiple returns(TrainSet, TestSet)
         splitLikeHistory(HashSet<long> likes, int fold) 
