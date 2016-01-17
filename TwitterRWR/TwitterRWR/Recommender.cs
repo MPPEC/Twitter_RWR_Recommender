@@ -2,6 +2,7 @@
 
 namespace TweetRecommender
 {
+    // Below 'enum' part better move to 'graph.cs' file
     public enum NodeType { UNDEFINED, USER, ITEM, ETC }
     public enum EdgeType { UNDEFINED, LIKE, FRIENDSHIP, FOLLOW, MENTION, AUTHORSHIP, PURCHASE, ETC } // Unnecessary: 'PURCHASE', 'ETC' 
 
