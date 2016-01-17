@@ -274,7 +274,7 @@ namespace TweetRecommender {
                     addUserNode(followee, NodeType.USER);
             }
         }
-// !!! Part have to debug
+// !!! Need Revision
         public void addTweetNodesAndLikeEdges(int fold) 
         {
             // Tweets that members(ego U friends) like: retweet, quote, favorite
@@ -321,7 +321,7 @@ namespace TweetRecommender {
                 }
             }
         }
-        
+// !!! Need Revision        
         // K-fold 'TrainSet', 'TestSet'
         public KeyValuePair<HashSet<long>, HashSet<long>> // !!!: 'KeyValuePair' is used for multiple returns(TrainSet, TestSet), so can be replcaed another 'datastructure'
         splitLikeHistory(HashSet<long> likes, int fold) // <Ego liked tweet IDs, Kth fold in Nfolds>
