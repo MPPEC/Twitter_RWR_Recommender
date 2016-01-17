@@ -4,6 +4,7 @@ using System.IO;
 
 namespace TweetRecommender {
     public class DataLoader {
+        /*************************************** Properties ***************************************************/
         // Ego user's ID
         private long egoUserId;
         public int cntLikesOfEgoUser; // !!!: Necessary Variable???
@@ -27,6 +28,7 @@ namespace TweetRecommender {
         private int nFolds;
         public HashSet<long> testSet;
 
+        /*************************************** Constructor ***************************************************/
         public DataLoader(string dbPath, int nFolds) 
         {
             this.egoUserId = long.Parse(Path.GetFileNameWithoutExtension(dbPath));
