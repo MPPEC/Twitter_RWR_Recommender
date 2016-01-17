@@ -65,7 +65,7 @@ namespace TweetRecommender {
 
         public void addLink(int idxSourceNode, int idxTargetNode, EdgeType type, double weight) 
         {
-            if (!allLinks.ContainsKey(idxSourceNode))
+            if (!allLinks.ContainsKey(idxSourceNode)) // !!! Name change: 'allLinks' --> 'linksFromNodes'
                 allLinks.Add(idxSourceNode, new List<ForwardLink>());
 
             bool exist = false;
