@@ -416,7 +416,7 @@ namespace TweetRecommender {
                 }
             }
         }
-
+        // Add 'mention edge' between each pair of users in ego-network
         public void addMentionCount() 
         {
             foreach (long memberId1 in memberIDs.Keys) 
@@ -451,7 +451,7 @@ namespace TweetRecommender {
                     if (friendship.type == EdgeType.FRIENDSHIP)
                         nFriendhips += 1;
                 }
-
+                // Normalization
                 // Add link with the weight as much as mention frequency
                 if (sumLogMentionCount > 1) 
                 {
