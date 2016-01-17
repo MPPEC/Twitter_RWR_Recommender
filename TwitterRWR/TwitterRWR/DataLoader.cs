@@ -324,7 +324,7 @@ namespace TweetRecommender {
         
         // K-fold 'TrainSet', 'TestSet'
         public KeyValuePair<HashSet<long>, HashSet<long>> // 'KeyValuePair' is used for multiple returns(TrainSet, TestSet)
-        splitLikeHistory(HashSet<long> likes, int fold) 
+        splitLikeHistory(HashSet<long> likes, int fold) // <Ego liked tweet IDs, Kth fold in Nfolds>
         {
             List<long> likesList = new List<long>();
             foreach (long like in likes)
