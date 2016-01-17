@@ -14,7 +14,7 @@ namespace TweetRecommender {
 
         // Graph information
         private int nNodes = 0; // # of all nodes(equal to last node index)
-        private int nLinks = 0; // # of all links(equal to last link index)
+        private int nLinks = 0; // # of all links
         public Dictionary<int, Node> allNodes = new Dictionary<int, Node>(); // <Node Index, Node Object>, 'Node' defined in 'graph.cs'
         public Dictionary<int, List<ForwardLink>> allLinks = new Dictionary<int, List<ForwardLink>>(); // <Node Index, Out Links List>
 
@@ -68,7 +68,7 @@ namespace TweetRecommender {
             if (!allLinks.ContainsKey(idxSourceNode)) // !!! Name change: 'allLinks' --> 'linksFromNodes'
                 allLinks.Add(idxSourceNode, new List<ForwardLink>());
 
-            bool exist = false;
+            bool exist = false; // flag: already link(also equal type) between two nodes
             foreach (ForwardLink forwardLink in allLinks[idxSourceNode]) 
             {
                 if (forwardLink.targetNode == idxTargetNode && forwardLink.type == type) 
