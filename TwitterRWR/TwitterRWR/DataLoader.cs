@@ -274,10 +274,10 @@ namespace TweetRecommender {
                     addUserNode(followee, NodeType.USER);
             }
         }
-
+// !!! Part have to debug
         public void addTweetNodesAndLikeEdges(int fold) 
         {
-            // Tweets that members like: retweet, quote, favorite
+            // Tweets that members(ego U friends) like: retweet, quote, favorite
             foreach (long memberId in memberIDs.Keys) 
             {
                 // Node index of given member
@@ -306,8 +306,8 @@ namespace TweetRecommender {
                         addLink(idxMember, tweetIDs[tweet], EdgeType.LIKE, 1);
                         addLink(tweetIDs[tweet], idxMember, EdgeType.LIKE, 1);
                     }
-
-                    // Set test set
+                    
+                    // Set test set: !!! Suspicous Error Part:
                     testSet = data.Value;
                 } 
                 else 
