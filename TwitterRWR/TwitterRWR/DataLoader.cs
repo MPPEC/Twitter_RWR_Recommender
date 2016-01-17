@@ -254,7 +254,7 @@ namespace TweetRecommender {
             // Print out the graph information
             printGraphInfo();
         }
-
+        // Member = ego U ego's friends
         public void addMemberNodes() 
         {
             // Add ego user's node
