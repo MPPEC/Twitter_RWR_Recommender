@@ -85,24 +85,6 @@ namespace TweetRecommender {
                 nLinks += 1;
             }
         }
-// !!!: Maybe useless method
-        public bool checkEgoNetworkValidation() 
-        {
-            int cntLikes = getLikeCountOfEgoUser();
-            int cntFriends = getFriendsCountOfEgoUser();
-            if (cntLikes < nFolds || cntLikes < 50 || cntFriends < 50) 
-            {
-                lock (Program.locker) 
-                {
-                    Console.WriteLine("ERROR: The ego network(" + egoUserId + ") is not valid for experiment.");
-                    Console.WriteLine("\t* # of likes: " + cntLikes);
-                    Console.WriteLine("\t* # of friends: " + cntFriends);
-                    Console.WriteLine("\t* # of folds: " + nFolds);
-                }
-                return false;
-            }
-            return true;
-        }
 
         public int getLikeCountOfEgoUser() 
         {
@@ -119,20 +101,6 @@ namespace TweetRecommender {
                 likes.Add(favorite);
             cntLikesOfEgoUser = likes.Count;
             return likes.Count;
-        }
-// !!!: Maybe useless method
-        public int getFriendsCountOfEgoUser() 
-        {
-            // Get friends of ego network
-            HashSet<long> friends = new HashSet<long>();
-            HashSet<long> followeesOfEgoUser = dbAdapter.getFollowingUsers(egoUserId);
-            foreach (long followee in followeesOfEgoUser) 
-            {
-                HashSet<long> followeesOfFollowee = dbAdapter.getFollowingUsers(followee);
-                if (followeesOfFollowee.Contains(egoUserId))
-                    friends.Add(followee);
-            }
-            return friends.Count;
         }
 
         // #1 Main Part
@@ -302,7 +270,7 @@ namespace TweetRecommender {
                     var data = splitLikeHistory(likes, fold);
                     foreach (long tweet in data.Key) // data.Key: train set of like history
                     {               
-                        addTweetNode(tweet, NodeType.ITEM);
+                        addTweetNode(tweet, NodeType.TWEET);
                         addLink(idxMember, tweetIDs[tweet], EdgeType.LIKE, 1);
                         addLink(tweetIDs[tweet], idxMember, EdgeType.LIKE, 1);
                     }
@@ -314,7 +282,7 @@ namespace TweetRecommender {
                 {
                     foreach (long tweet in likes) // Maek 'edges' between user and liked tweets
                     {
-                        addTweetNode(tweet, NodeType.ITEM);
+                        addTweetNode(tweet, NodeType.TWEET);
                         addLink(idxMember, tweetIDs[tweet], EdgeType.LIKE, 1);
                         addLink(tweetIDs[tweet], idxMember, EdgeType.LIKE, 1);
                     }
@@ -386,7 +354,7 @@ namespace TweetRecommender {
                         if (inclFollowshipOnThirdparty) 
                         {
                             // Add third part user
-                            addUserNode(followee, NodeType.ETC);
+                            addUserNode(followee, NodeType.COFOLLOWEE);
 
                             // Add links between member and third party user
                             addLink(idxMember, userIDs[followee], EdgeType.FOLLOW, 1);

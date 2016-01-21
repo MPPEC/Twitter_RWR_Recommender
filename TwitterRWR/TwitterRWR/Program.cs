@@ -69,7 +69,7 @@ namespace TweetRecommender
             // One .sqlite to One thread
             foreach (string dbFile in sqliteDBs) 
             {
-                Thread thread = new Thread(new ParameterizedThreadStart(Experiment.runKFoldCrossValidation)); // Core Part
+                Thread thread = new Thread(new ParameterizedThreadStart(Experiment.personalizedPageRank)); // Core Part
                 ThreadParams parameters = new ThreadParams(dbFile, nFolds, nIterations); // 'ThreadParams': defined in 'Experiment.cs'
                 thread.Start(parameters);
                 threadList.Add(thread);

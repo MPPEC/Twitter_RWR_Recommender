@@ -3,8 +3,10 @@ using System.Diagnostics;
 
 namespace TweetRecommender
 { 
-    public class Tools {
-        public static void printExecutionTime(Stopwatch stopwatch) {
+    public class Tools
+    {
+        public static void printExecutionTime(Stopwatch stopwatch)
+        {
             var timespan = TimeSpan.FromMilliseconds(stopwatch.ElapsedMilliseconds);
             Console.WriteLine("Execution time: " + timespan.ToString());
         }

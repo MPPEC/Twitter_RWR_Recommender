@@ -32,7 +32,7 @@ namespace TweetRecommender
 
     public class Experiment 
     {
-        public static void runKFoldCrossValidation(object parameters) 
+        public static void personalizedPageRank(object parameters) 
         {
             try 
             {
@@ -44,16 +44,11 @@ namespace TweetRecommender
                 int nFolds = p.nFolds;
                 int nIterations = p.nIterations;
 
-                // Check if the DB file exists
-                if (!File.Exists(dbFile))
-                    throw new FileNotFoundException(dbFile);
-
                 // Do experiments for each methodology
                 foreach (Methodology methodology in Program.methodologies) 
                 {
                     // Get ego user's ID and his like count
                     long egoUser = long.Parse(Path.GetFileNameWithoutExtension(dbFile));
-                    int cntLikes = 0; // Initialization
 
                     // Check if this experiment has ever been performed earlier
                     int m = (int) methodology;
@@ -79,13 +74,7 @@ namespace TweetRecommender
                     {
                         // Load graph information from database and then configurate the graph
                         DataLoader loader = new DataLoader(dbFile, nFolds);
-                        // !!!: Right below block may be useless
-                        if (fold == 0) 
-                        {
-                            if (loader.checkEgoNetworkValidation() == false)
-                                return;
-                            cntLikes = loader.cntLikesOfEgoUser; // !!!Suspect Here
-                        }
+
                         // #1 Core Part: 'EgoNetwork DB' --> 'Graph Structure(Node, Edge)'
                         loader.graphConfiguration(methodology, fold); 
 
@@ -93,7 +82,7 @@ namespace TweetRecommender
                         Dictionary<int, Node> nodes = loader.allNodes;
                         Dictionary<int, List<ForwardLink>> edges = loader.allLinks;
                         // Mention Count(O), Friendship(X)
-                        // Exeption: for the case that mention count is included when the friendship is none
+                        // Exception: for the case that mention count is included when the friendship is none
                         if (methodology == Methodology.INCL_MENTIONCOUNT
                             || methodology == Methodology.EXCL_FRIENDSHIP
                             || methodology == Methodology.INCL_FOLLOWSHIP_ON_THIRDPARTY_AND_MENTIONCOUNT) 
@@ -156,14 +145,14 @@ namespace TweetRecommender
                     lock (Program.locker) 
                     {
                         // Write the result of this ego network to file
-                        StreamWriter logger = new StreamWriter(Program.dirData + "result.dat", true);
+                        StreamWriter logger = new StreamWriter(Program.dirData + "result.txt", true);
                         logger.Write(egoUser + "\t" + (int)methodology + "\t" + nFolds + "\t" + nIterations);
                         foreach (EvaluationMetric metric in metrics) 
                         {
                             switch (metric) 
                             {
                                 case EvaluationMetric.HIT:
-                                    logger.Write("\t" + (int)finalResult[metric] + "\t" + cntLikes); 
+                                    logger.Write("\t" + (int)finalResult[metric] + "\t"); 
                                     break;
                                 case EvaluationMetric.AVGPRECISION:
                                     logger.Write("\t" + (finalResult[metric] / nFolds)); 

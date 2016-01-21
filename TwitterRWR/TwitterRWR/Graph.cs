@@ -7,12 +7,6 @@ namespace TweetRecommender
         public long id;
         public NodeType type;
 
-        public Node(long id) 
-        {
-            this.id = id;
-            this.type = NodeType.UNDEFINED;
-        }
-
         public Node(long id, NodeType type) 
         {
             this.id = id;

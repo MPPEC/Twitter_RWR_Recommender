@@ -3,8 +3,8 @@
 namespace TweetRecommender
 {
     // Below 'enum' part better move to 'graph.cs' file
-    public enum NodeType { UNDEFINED, USER, ITEM, ETC }
-    public enum EdgeType { UNDEFINED, LIKE, FRIENDSHIP, FOLLOW, MENTION, AUTHORSHIP, PURCHASE, ETC } // Unnecessary: 'PURCHASE', 'ETC' 
+    public enum NodeType { USER, TWEET, CANDIDATE, COFOLLOWEE }
+    public enum EdgeType { UNDEFINED, LIKE, FRIENDSHIP, FOLLOW, MENTION, AUTHORSHIP} // Unnecessary: 'PURCHASE', 'ETC' 
 
     public class Recommender 
     {
@@ -34,7 +34,7 @@ namespace TweetRecommender
             var recommendation = new List<KeyValuePair<long, double>>();
             for (int i = 0; i < model.nNodes; i++) 
             {
-                if (graph.nodes[i].type == NodeType.ITEM && !linksOfTargetUser.Contains(i))
+                if (graph.nodes[i].type == NodeType.TWEET && !linksOfTargetUser.Contains(i))
                     recommendation.Add(new KeyValuePair<long, double>(graph.nodes[i].id, model.rank[i])); // <Tweet ID, Ranking Score>
             }
 
