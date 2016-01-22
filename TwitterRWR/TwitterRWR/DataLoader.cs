@@ -39,11 +39,6 @@ namespace TweetRecommender {
             egoUser = new User(egoID);
         }
 
-        public void close()
-        {
-            // Close database connection
-            dbAdapter.closeDB();
-        }
         /*******************************************************************************/
         /***************************** Primary Methods *********************************/
         /*******************************************************************************/
@@ -94,22 +89,18 @@ namespace TweetRecommender {
             ICollection followeeList = this.followeeTable.Values;
             foreach (User followee in followeeList)
             {
-                // Only Friends
-                if (followee.isFriend(egoUser))
+                // Domain 1 Version: timeline = retweet(f) U quote(f) U favorite(f)
+                HashSet<long> likedTweets = followee.getLikedTweets();
+                foreach (long tweet in likedTweets)
                 {
-                    // Domain 1 Version: timeline = retweet(f) U quote(f) U favorite(f)
-                    HashSet<long> likedTweets = followee.getLikedTweets();
-                    foreach (long tweet in likedTweets)
-                    {
-                        this.egoTimeline.Add(tweet);
-                    }
+                    this.egoTimeline.Add(tweet);
                 }
             }
             Console.WriteLine("|Total Timeline|: " + this.egoTimeline.Count);
         }
 
         // Return: Ego Timeline --> Boundary of K sub-timelines --> K sub-datasets
-        public void kFoldCrossValidation(int K)
+        public void splitTimelineToKfolds(int K)
         {
             this.dataSets = new DataSet[K];
             int boundary = (int)this.egoTimeline.Count / K;
@@ -142,6 +133,7 @@ namespace TweetRecommender {
         {
             this.trainSet = new DataSet();
             this.testSet = dataSets[index]; // TestSet Setting
+            this.testSet.clear();
 
             for (int i = 0; i < this.dataSets.Length; i++)
             {
@@ -149,8 +141,8 @@ namespace TweetRecommender {
                     trainSet.unionWith(dataSets[i]);
             }
             // Total Ego liked tweets within timebound of the timeline
-            HashSet<long> egoLikedTweets = egoUser.getLikedTweets();
-            foreach (long tweet in egoLikedTweets)
+            egoUser.updateLikedTweets(); // Recharge Liked Tweets: for another kfold validation
+            foreach (long tweet in egoUser.getLikedTweets())
             {
                 if (testSet.isInTimebound(tweet))
                 {
@@ -158,7 +150,9 @@ namespace TweetRecommender {
                     egoUser.deleteLikedTweet(tweet); // Assure candidate tweets are not liked yet by Ego User
                 }
                 else
+                {
                     trainSet.addEgoLikedTweet(tweet);
+                }
             }
         }
 
@@ -271,7 +265,11 @@ namespace TweetRecommender {
 
             // Print out the graph information
             printGraphInfo();
+
+            // Close DB connection
+            this.dbAdapter.closeDB();
         }
+
         /*********************************************************************************/
         /***************************** Secondary Methods *********************************/
         /*********************************************************************************/
@@ -330,7 +328,7 @@ namespace TweetRecommender {
                     User followee = (User)followeeTable[memberID];
                     foreach (long tweet in followee.getLikedTweets()) 
                     {
-                        if (!this.trainSet.contain(tweet)) // Tweets(!Candidate Tweet) liked by followee
+                        if (!this.testSet.contain(tweet)) // Tweets(!Candidate Tweet) liked by followee
                         {
                             addTweetNode(tweet, NodeType.TWEET);
                             addLink(memberIndex, tweetIDtoIndex[tweet], EdgeType.LIKE, 1);
@@ -521,5 +519,6 @@ namespace TweetRecommender {
             }
         }
 
+        public DataSet getTestSet() { return this.testSet; }
     }
 }

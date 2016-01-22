@@ -71,6 +71,8 @@
     <Compile Include="SQLiteAdapter.cs" />
     <Compile Include="Data\User.cs" />
     <Compile Include="Others\Tools.cs" />
+    <None Include="Temporary\tempExperiment.cs" />
+    <None Include="Temporary\tempProgram.cs" />
     <None Include="packages.config" />
     <Compile Include="DataLoader.cs" />
     <Compile Include="Experiment.cs" />

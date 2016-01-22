@@ -8,12 +8,12 @@ using System.IO;
 using System.Threading; // Multi-threading Library
 using System.Threading.Tasks;
 
-namespace TweetRecommender 
+namespace TweetRecommender
 {
-    public class Program 
+    public class Program
     {
         // To limit the number of multithreading concurrency
-        public static Semaphore semaphore;
+        public static Semaphore semaphore = new Semaphore(10, 10);
 
         // To avoid file writer collision
         public static Object locker = new Object();
@@ -28,7 +28,7 @@ namespace TweetRecommender
         public static Dictionary<long, List<int>> existingResults = new Dictionary<long, List<int>>(); // (<ego ID>, <{Experiments Codes}>)
 
         // Command line argument: C:\Users\M-PEC\Desktop\sample 0,1 5 10
-        public static void Main(string[] args) 
+        public static void Main(string[] args)
         {
             Console.WriteLine("RWR-based Recommendation (" + DateTime.Now.ToString() + ")\n");
             Stopwatch stopwatch = Stopwatch.StartNew(); // Stopwatch: C# Standard Library Class
@@ -40,11 +40,11 @@ namespace TweetRecommender
             int nIterations = int.Parse(args[3]);                       // Number of iterations for RWR
 
             // Load existing experimental results: SKIP already performed experiments
-            if (File.Exists(dirData + "result.txt")) 
+            if (File.Exists(dirData + "result.txt"))
             {
                 StreamReader reader = new StreamReader(dirData + "result.txt");
                 string line;
-                while ((line = reader.ReadLine()) != null) 
+                while ((line = reader.ReadLine()) != null)
                 {
                     string[] tokens = line.Split('\t');
                     if (tokens.Length != 7)
@@ -60,21 +60,25 @@ namespace TweetRecommender
 
             // Run experiments using multi-threading
             string[] sqliteDBs = Directory.GetFiles(dirData, "*.sqlite");
+            List<Thread> threadList = new List<Thread>(); // 'Thread': Standard Library Class
 
             // Methodology list
             methodologies = new List<Methodology>();
             foreach (string methodology in methodologyList) // 'methodologyList' == args[1]
-                methodologies.Add((Methodology) int.Parse(methodology));
+                methodologies.Add((Methodology)int.Parse(methodology));
 
             // One .sqlite to One thread
-            semaphore = new Semaphore(nFolds, nFolds);
-            foreach (string dbFile in sqliteDBs) 
+            foreach (string dbFile in sqliteDBs)
             {
-                Experiment experiment = new Experiment(dbFile, nFolds, nIterations);
-                experiment.startPersonalizedPageRank();
+                Thread thread = new Thread(new ParameterizedThreadStart(Experiment.personalizedPageRank)); // Core Part
+                ThreadParams parameters = new ThreadParams(dbFile, nFolds, nIterations); // 'ThreadParams': defined in 'Experiment.cs'
+                thread.Start(parameters);
+                threadList.Add(thread);
             }
+            // Synchronization: Wait until threads be terminated
+            foreach (Thread thread in threadList)
+                thread.Join();
 
-            // Execution Time
             stopwatch.Stop();
             Tools.printExecutionTime(stopwatch);
             Console.WriteLine("Finished!");

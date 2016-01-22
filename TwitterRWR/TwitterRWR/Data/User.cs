@@ -63,14 +63,6 @@ namespace TwitterRWR.Data
         {
             if (this.likedTweets.Contains(tweet))
                 this.likedTweets.Remove(tweet);
-            if (this.publishedTweets.Contains(tweet))
-                this.publishedTweets.Remove(tweet);
-            if (this.retweets.Contains(tweet))
-                this.retweets.Remove(tweet);
-            if (this.quotes.Contains(tweet))
-                this.quotes.Remove(tweet);
-            if (this.favorites.Contains(tweet))
-                this.favorites.Remove(tweet);
         }
     }
 }

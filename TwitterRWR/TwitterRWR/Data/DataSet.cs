@@ -51,20 +51,22 @@ namespace TwitterRWR.Data
         // Set Operation: Union
         public void unionWith(DataSet otherDataSet)
         {
-            this.egoLikedTweetsInTimeline.UnionWith(otherDataSet.egoLikedTweetsInTimeline);
-            this.egoUnLikedTweetsInTimeline.UnionWith(otherDataSet.egoUnLikedTweetsInTimeline);
-            this.timeline.UnionWith(otherDataSet.timeline);
+            foreach (long tweet in otherDataSet.egoLikedTweetsInTimeline)
+                this.egoLikedTweetsInTimeline.Add(tweet);
+            foreach (long tweet in otherDataSet.egoUnLikedTweetsInTimeline)
+                this.egoUnLikedTweetsInTimeline.Add(tweet);
+            foreach (long tweet in otherDataSet.timeline)
+                this.timeline.Add(tweet);
         }
 
         // Check the tweet is in timebound of timeline
         public bool isInTimebound(long tweet)
         {
-            TweetIDComparer comparer = new TweetIDComparer();
-            // Notice: Timeline is 'reverse chronological order' == minTweet ID > maxTweet ID
-            long minTweet = (long)this.timeline.Min;
-            long maxTweet = (long)this.timeline.Max;
-            // minTweet ID <= tweet ID <= maxTweet ID
-            if (comparer.Compare(tweet, minTweet) >= 0 && comparer.Compare(maxTweet, tweet) >= 0)
+            // Notice: Timeline is 'reverse chronological order'
+            long minTweet = (long)this.timeline.Max;
+            long maxTweet = (long)this.timeline.Min;
+            // maxTweet ID <= tweet ID <= minTweet ID
+            if (tweet >= minTweet && tweet <= maxTweet)
                 return true;
             else
                 return false;
@@ -75,6 +77,10 @@ namespace TwitterRWR.Data
         {
             foreach (long tweet in this.timeline)
                 Console.WriteLine(tweet);
+        }
+        public void clear()
+        {
+            this.egoLikedTweets.Clear();
         }
     }
 }

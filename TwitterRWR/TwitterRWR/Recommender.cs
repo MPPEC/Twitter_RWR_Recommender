@@ -34,7 +34,7 @@ namespace TweetRecommender
             var recommendation = new List<KeyValuePair<long, double>>();
             for (int i = 0; i < model.nNodes; i++) 
             {
-                if (graph.nodes[i].type == NodeType.TWEET && !linksOfTargetUser.Contains(i))
+                if (graph.nodes[i].type == NodeType.CANDIDATE)
                     recommendation.Add(new KeyValuePair<long, double>(graph.nodes[i].id, model.rank[i])); // <Tweet ID, Ranking Score>
             }
 
