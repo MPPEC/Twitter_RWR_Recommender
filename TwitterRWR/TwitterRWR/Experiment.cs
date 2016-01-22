@@ -69,12 +69,19 @@ namespace TweetRecommender
                     // Need to avoid the following error: "Collection was modified; enumeration operation may not execute"
                     List<EvaluationMetric> metrics = new List<EvaluationMetric>(finalResult.Keys);
 
+                    // Load graph information from database and then configurate the graph
+                    DataLoader loader = new DataLoader(dbFile);
+                    loader.setEgoNetwork();
+                    loader.setEgoTimeline();
+                    loader.kFoldCrossValidation(nFolds);
+                    loader.setTrainTestSet(0);
+                    List<Feature> features = loader.getFeaturesOnMethodology(methodology);
+                    loader.setGraphConfiguration(features);
+                    loader.close();
+/*                   
                     // K-Fold Cross Validation
                     for (int fold = 0; fold < nFolds; fold++) 
                     {
-                        // Load graph information from database and then configurate the graph
-                        DataLoader loader = new DataLoader(dbFile, nFolds);
-
                         // #1 Core Part: 'EgoNetwork DB' --> 'Graph Structure(Node, Edge)'
                         loader.graphConfiguration(methodology, fold); 
 
@@ -162,6 +169,7 @@ namespace TweetRecommender
                         logger.WriteLine();
                         logger.Close();
                     }
+*/
                 }
             } 
             catch (FileNotFoundException e) 
