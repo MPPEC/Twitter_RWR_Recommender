@@ -49,7 +49,7 @@ namespace TweetRecommender
             for (int i = 0; i < nNodes; i++) 
             {
                 ForwardLink[] links = forwardLinks[i]; // All out links of 'i'th node
-                if (links != null && links.Length > 0) 
+                if (links != null && links.Length > 0) // ???: Equal Expression('links != null', 'links.Length > 0')
                 {
                     int nLinks = links.Length;
 
@@ -68,6 +68,7 @@ namespace TweetRecommender
                 } 
                 else 
                 {
+                    // !!! Suspicious Part: How about virtual links in 'Graph.cs' part 
                     // Dangling node: the rank score is delivered along with only virtual links
                     for (int r = 0; r < nNodes; r++)
                         nextRank[r] += rank[i] * restart[r];

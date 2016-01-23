@@ -21,7 +21,7 @@ namespace TweetRecommender
             // Run Random Walk with Restart
             Model model = new Model(graph, dampingFactor, idxTargetUser);
             model.run(nIteration); // # Core Part
-
+// Maybe Useless
             // Make exception list of items(tweets) already liked by ego user
             var linksOfTargetUser = new List<int>();
             foreach (ForwardLink link in graph.edges[idxTargetUser]) 
