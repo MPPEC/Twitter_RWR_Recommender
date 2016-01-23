@@ -49,6 +49,7 @@ namespace TweetRecommender
             {
                 StreamReader reader = new StreamReader(outFilePath);
                 string line;
+                reader.ReadLine(); // Discard First Line(Headline)
                 while ((line = reader.ReadLine()) != null) 
                 {
                     string[] tokens = line.Split('\t');
