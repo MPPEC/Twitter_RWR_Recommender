@@ -68,6 +68,7 @@ namespace TweetRecommender
                 } 
                 else 
                 {
+                    // !!! Suspicious Part: How about virtual links in 'Graph.cs' part 
                     // Dangling node: the rank score is delivered along with only virtual links
                     for (int r = 0; r < nNodes; r++)
                         nextRank[r] += rank[i] * restart[r];
