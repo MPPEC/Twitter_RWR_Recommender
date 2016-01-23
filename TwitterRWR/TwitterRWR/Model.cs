@@ -49,7 +49,7 @@ namespace TweetRecommender
             for (int i = 0; i < nNodes; i++) 
             {
                 ForwardLink[] links = forwardLinks[i]; // All out links of 'i'th node
-                if (links != null && links.Length > 0) 
+                if (links != null && links.Length > 0) // ???: Equal Expression('links != null', 'links.Length > 0')
                 {
                     int nLinks = links.Length;
 
