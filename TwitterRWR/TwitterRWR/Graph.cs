@@ -13,7 +13,7 @@ namespace TweetRecommender
             this.type = type;
         }
     }
-
+// Maybe Useless
     public struct ForwardLink 
     {
         public int targetNode;
