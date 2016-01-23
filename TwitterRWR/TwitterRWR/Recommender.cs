@@ -1,11 +1,7 @@
 ﻿using System.Collections.Generic;
 
 namespace TweetRecommender
-{
-    // Below 'enum' part better move to 'graph.cs' file
-    public enum NodeType { USER, TWEET, CANDIDATE, COFOLLOWEE }
-    public enum EdgeType { UNDEFINED, LIKE, FRIENDSHIP, FOLLOW, MENTION, AUTHORSHIP} // Unnecessary: 'PURCHASE', 'ETC' 
-
+{ 
     public class Recommender 
     {
         private Graph graph;
@@ -21,14 +17,6 @@ namespace TweetRecommender
             // Run Random Walk with Restart
             Model model = new Model(graph, dampingFactor, idxTargetUser);
             model.run(nIteration); // # Core Part
-// Maybe Useless
-            // Make exception list of items(tweets) already liked by ego user
-            var linksOfTargetUser = new List<int>();
-            foreach (ForwardLink link in graph.edges[idxTargetUser]) 
-            {
-                if (link.type == EdgeType.LIKE)
-                    linksOfTargetUser.Add(link.targetNode);
-            }
 
             // Sort candidate items(not alreday liked tweets) by their ranking score
             var recommendation = new List<KeyValuePair<long, double>>();

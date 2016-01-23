@@ -15,7 +15,7 @@ namespace TweetRecommender
         public Model(Graph graph, double dampingFactor, int targetNode) 
         {
             this.graph = graph;
-            this.nNodes = graph.size();
+            this.nNodes = graph.getCntAllNodes();
             this.dampingFactor = dampingFactor;
             
             rank = new double[nNodes];
@@ -29,7 +29,7 @@ namespace TweetRecommender
                 nextRank[i] = 0;
 
                 // Make restart weight
-                restart[i] = (i == targetNode) ? 1d : 0;
+                restart[i] = (i == targetNode) ? 1d : 0; // [1, 0, 0, 0, 0, ... , 0, 0, 0]: Personalized PageRank
             }
         }
 
@@ -48,31 +48,21 @@ namespace TweetRecommender
             Dictionary<int, ForwardLink[]> forwardLinks = graph.graph; // <Node's Index, Outlinks>
             for (int i = 0; i < nNodes; i++) 
             {
-                ForwardLink[] links = forwardLinks[i]; // All out links of 'i'th node
-                if (links != null && links.Length > 0) // ???: Equal Expression('links != null', 'links.Length > 0')
-                {
-                    int nLinks = links.Length;
+                ForwardLink[] links = forwardLinks[i]; // 'i'th node links
+                int nLinks = links.Length;
 
-                    // Deliver rank score with Random Walk
-                    double rank_randomWalk = (1 - dampingFactor) * rank[i];
-                    for (int w = 0; w < nLinks; w++) 
-                    {
-                        ForwardLink link = links[w];
-                        nextRank[link.targetNode] += rank_randomWalk * link.weight;
-                    }
-
-                    // Deliver rank score with Restart
-                    double rank_restart = rank[i] - rank_randomWalk;
-                    for (int r = 0; r < nNodes; r++)
-                        nextRank[r] += rank_restart * restart[r];
-                } 
-                else 
+                // Deliver rank score with Random Walk
+                double rank_randomWalk = (1 - dampingFactor) * rank[i];
+                for (int w = 0; w < nLinks; w++)
                 {
-                    // !!! Suspicious Part: How about virtual links in 'Graph.cs' part 
-                    // Dangling node: the rank score is delivered along with only virtual links
-                    for (int r = 0; r < nNodes; r++)
-                        nextRank[r] += rank[i] * restart[r];
+                    ForwardLink link = links[w];
+                    nextRank[link.targetNode] += rank_randomWalk * link.weight;
                 }
+
+                // Deliver rank score with Restart(Random Jump)
+                double rank_restart = dampingFactor * rank[i];
+                for (int r = 0; r < nNodes; r++)
+                    nextRank[r] += rank_restart * restart[r];
             }
         }
 

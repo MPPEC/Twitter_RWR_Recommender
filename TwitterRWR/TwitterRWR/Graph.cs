@@ -2,6 +2,10 @@
 
 namespace TweetRecommender
 {
+    // Below 'enum' part better move to 'graph.cs' file
+    public enum NodeType { USER, TWEET, CANDIDATE, COFOLLOWEE }
+    public enum EdgeType { UNDEFINED, LIKE, FRIENDSHIP, FOLLOW, MENTION, AUTHORSHIP, VIRTUAL }
+
     public struct Node 
     {
         public long id;
@@ -13,19 +17,12 @@ namespace TweetRecommender
             this.type = type;
         }
     }
-// Maybe Useless
+
     public struct ForwardLink 
     {
         public int targetNode;
         public EdgeType type;
         public double weight;
-
-        public ForwardLink(int targetNode, double weight) 
-        {
-            this.targetNode = targetNode;
-            this.type = EdgeType.UNDEFINED;
-            this.weight = weight;
-        }
 
         public ForwardLink(int targetNode, EdgeType type, double weight) 
         {
@@ -90,13 +87,24 @@ namespace TweetRecommender
                             forwardLinks[f].weight /= sumWeights;
                     }
                 }
+                // Dangling node: Add virtual links to all nodes(include itself)
+                else
+                {
+                    forwardLinks = new ForwardLink[nodes.Count];
+                    double weight = 1.0 / nodes.Count;
+                    for (int j = 0; j < nodes.Count; j++)
+                    {
+                        ForwardLink virtualLink = new ForwardLink(j, EdgeType.VIRTUAL, weight);
+                        forwardLinks[j] = virtualLink;
+                    }
+                }
                 // Add filterd forward links of 'i'th node
                 graph.Add(i, forwardLinks);
             }
         }
 
         // Get the number of nodes in the graph
-        public int size() 
+        public int getCntAllNodes() 
         {
             return nodes.Count;
         }

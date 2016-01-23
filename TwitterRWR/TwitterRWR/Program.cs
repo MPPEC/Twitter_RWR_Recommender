@@ -38,20 +38,20 @@ namespace TweetRecommender
 
             // Program arguments
             dirData = @args[0] + Path.DirectorySeparatorChar;           // Path of directory that containes SQLite DB files
-            string[] methodologyList = args[1].Split(',');              // The list of experimental codes (csv format; for example: 0,1,8,9,10,11,12 )
-            int nFolds = int.Parse(args[2]);                            // Number of folds
-            int nIterations = int.Parse(args[3]);                       // Number of iterations for RWR
+            string outFilePath = args[0] + "\\" + args[1];
+            Console.WriteLine(outFilePath);
+            string[] methodologyList = args[2].Split(',');              // The list of experimental codes (csv format; for example: 0,1,8,9,10,11,12 )
+            int nFolds = int.Parse(args[3]);                            // Number of folds
+            int nIterations = int.Parse(args[4]);                       // Number of iterations for RWR
 
             // Load existing experimental results: SKIP already performed experiments
-            if (File.Exists(dirData + "result.txt")) 
+            if (File.Exists(outFilePath)) 
             {
-                StreamReader reader = new StreamReader(dirData + "result.txt");
+                StreamReader reader = new StreamReader(outFilePath);
                 string line;
                 while ((line = reader.ReadLine()) != null) 
                 {
                     string[] tokens = line.Split('\t');
-                    if (tokens.Length != 7)
-                        continue;
                     long egouser = long.Parse(tokens[0]);
                     int experiment = int.Parse(tokens[1]);
                     if (!existingResults.ContainsKey(egouser))
@@ -70,7 +70,7 @@ namespace TweetRecommender
                 methodologies.Add((Methodology) int.Parse(methodology));
 
             // Result File Format
-            Program.logger = new StreamWriter(Program.dirData + "RWR_MAP_Friend.Domain1.txt", true);
+            Program.logger = new StreamWriter(outFilePath, true);
             Program.logger.WriteLine("{0}\t\t{1}\t{2}\t{3}\t{4}\t\t\t{5}\t\t\t{6}\t{7}\t{8}", "EGO", "Method", "Kfold", "Iter", "MAP", "RECALL", "LIKE", "HIT", "FRIEND");
 
             // #Core Part: One .sqlite to One thread
