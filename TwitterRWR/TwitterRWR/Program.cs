@@ -27,6 +27,9 @@ namespace TweetRecommender
         // Existing experimental result: To SKIP already performed experiments
         public static Dictionary<long, List<int>> existingResults = new Dictionary<long, List<int>>(); // (<ego ID>, <{Experiments Codes}>)
 
+        // For output file
+        public static StreamWriter logger;
+
         // Command line argument: C:\Users\M-PEC\Desktop\sample 0,1 5 10
         public static void Main(string[] args) 
         {
@@ -66,18 +69,26 @@ namespace TweetRecommender
             foreach (string methodology in methodologyList) // 'methodologyList' == args[1]
                 methodologies.Add((Methodology) int.Parse(methodology));
 
-            // One .sqlite to One thread
+            // Result File Format
+            Program.logger = new StreamWriter(Program.dirData + "RWR_MAP_Friend.Domain1.txt", true);
+            Program.logger.WriteLine("{0}\t\t{1}\t{2}\t{3}\t{4}\t\t\t{5}\t\t\t{6}\t{7}\t{8}", "EGO", "Method", "Kfold", "Iter", "MAP", "RECALL", "LIKE", "HIT", "FRIEND");
+
+            // #Core Part: One .sqlite to One thread
             semaphore = new Semaphore(nFolds, nFolds);
             foreach (string dbFile in sqliteDBs) 
             {
-                Experiment experiment = new Experiment(dbFile, nFolds, nIterations);
-                experiment.startPersonalizedPageRank();
+                Experiment experiment = new Experiment(dbFile);
+                experiment.startPersonalizedPageRank(nFolds, nIterations);
             }
+
+            // Close Output file
+            Program.logger.Close();
 
             // Execution Time
             stopwatch.Stop();
             Tools.printExecutionTime(stopwatch);
             Console.WriteLine("Finished!");
+
         }
     }
 }

@@ -18,6 +18,7 @@ namespace TweetRecommender {
         private SortedSet<long> egoTimeline;
         private DataSet[] dataSets;
         private DataSet trainSet, testSet;
+        private int numOfFriend;
 
         // Graph information
         private int nNodes = 0; // # of all nodes(equal to last node index)
@@ -37,6 +38,7 @@ namespace TweetRecommender {
             this.dbAdapter = new SQLiteAdapter(dbPath);
             long egoID = long.Parse(Path.GetFileNameWithoutExtension(dbPath));
             egoUser = new User(egoID);
+            numOfFriend = 0;
         }
 
         /*******************************************************************************/
@@ -65,9 +67,12 @@ namespace TweetRecommender {
                 followee.setQuotes(dbAdapter.getQuoteList(followee));
                 followee.setFavorites(dbAdapter.getFavoriteList(followee));
                 followee.updateLikedTweets();
-                // Only Friends
+                // Filtering: Only Friends
                 if (egoUser.isFriend(followee))
-                    followeeTable.Add(followee.ID, followee);       
+                {
+                    followeeTable.Add(followee.ID, followee);
+                    this.numOfFriend++;
+                }      
             }
             Console.WriteLine("|Friend| " + followeeTable.Count);
 
@@ -520,5 +525,6 @@ namespace TweetRecommender {
         }
 
         public DataSet getTestSet() { return this.testSet; }
+        public int getNumOfFriend() { return this.numOfFriend; }
     }
 }

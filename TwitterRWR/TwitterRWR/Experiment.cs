@@ -17,19 +17,21 @@ namespace TweetRecommender
         INCL_FOLLOWSHIP_ON_THIRDPARTY_AND_AUTHORSHIP, INCL_FOLLOWSHIP_ON_THIRDPARTY_AND_MENTIONCOUNT, INCL_AUTHORSHIP_AND_MENTIONCOUNT
     }
     public enum Feature { FRIENDSHIP, FOLLOWSHIP_ON_THIRDPARTY, AUTHORSHIP, MENTIONCOUNT } 
-    public enum EvaluationMetric { HIT, AVGPRECISION }
+    public enum EvaluationMetric { MAP, RECALL, LIKE, HIT }
 
     public struct ThreadParams 
     {
         public DataLoader loader;
         public Methodology methodology;
-        public int fold;
+        public int fold; // kth fold
+        public int nIteration;
 
-        public ThreadParams(DataLoader loader, Methodology methodology, int fold) 
+        public ThreadParams(DataLoader loader, Methodology methodology, int fold, int nIteration) 
         {
             this.loader = loader;
             this.methodology = methodology;
             this.fold = fold;
+            this.nIteration = nIteration;
         }
     }
 
@@ -37,26 +39,23 @@ namespace TweetRecommender
     {
         /*************************** Properties **************************************/
         private string dbPath;
-        private int nFold;
-        private int nIteration;
         private Dictionary<EvaluationMetric, double> finalResult;
         private List<EvaluationMetric> metrics;
+        private int numOfFriend;
 
         /****************************** Constructor **********************************/
-        public Experiment(string dbPath, int nFolds, int nIterations)
+        public Experiment(string dbPath)
         {
             this.dbPath = dbPath;
-            this.nFold = nFolds;
-            this.nIteration = nIterations;
         }
 
         /*******************************************************************************/
         /***************************** Primary Methods *********************************/
         /*******************************************************************************/
-        public void startPersonalizedPageRank() 
+        public void startPersonalizedPageRank(int nFold, int nIteration) 
         {
             try
-            {
+            {   
                 // Do experiments for each methodology
                 foreach (Methodology methodology in Program.methodologies)
                 {
@@ -90,9 +89,11 @@ namespace TweetRecommender
                         DataLoader loader = new DataLoader(this.dbPath);
                         loader.setEgoNetwork();
                         loader.setEgoTimeline();
-                        loader.splitTimelineToKfolds(this.nFold);
+                        loader.splitTimelineToKfolds(nFold);
+                        // |Friend|
+                        this.numOfFriend = loader.getNumOfFriend();
                         Thread thread = new Thread(new ParameterizedThreadStart(runKfoldCrossValidation)); // Core Part
-                        ThreadParams parameters = new ThreadParams(loader, methodology, fold); // 'ThreadParams': defined in 'Experiment.cs'
+                        ThreadParams parameters = new ThreadParams(loader, methodology, fold, nIteration); // 'ThreadParams': defined in 'Experiment.cs'
                         thread.Start(parameters);
                         threadList.Add(thread);
                     }
@@ -100,32 +101,33 @@ namespace TweetRecommender
                     foreach (Thread thread in threadList)
                         thread.Join();
 
-                    // Output file(.dat) format: <Ego ID>\t<Experi Code>\t<N-fold>\t<iteration>\t<hit>\t<|prefers tweets|>\t<MAP>
-                    lock (Program.locker)
+                    // Result: <Ego ID>\t<Experi Code>\t<N-fold>\t<iteration>\t<MAP>\t<Recall>\t<|LIKE|>\t<|HIT|>\t<|Friend|>
+                    Program.logger.Write(egoUser + "\t" + (int)methodology + "\t" + nFold + "\t" + nIteration);
+                    foreach (EvaluationMetric metric in metrics)
                     {
-                        // Write the result of this ego network to file
-                        StreamWriter logger = new StreamWriter(Program.dirData + "result.txt", true);
-                        logger.Write(egoUser + "\t" + (int)methodology + "\t" + this.nFold + "\t" + this.nIteration);
-                        foreach (EvaluationMetric metric in metrics)
+                        switch (metric)
                         {
-                            switch (metric)
-                            {
-                                case EvaluationMetric.HIT:
-                                    logger.Write("\t" + (int)finalResult[metric] + "\t");
-                                    break;
-                                case EvaluationMetric.AVGPRECISION:
-                                    logger.Write("\t" + (finalResult[metric] / this.nFold));
-                                    break;
-                            }
+                            case EvaluationMetric.MAP:
+                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / nFold));
+                                break;
+                            case EvaluationMetric.RECALL:
+                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / nFold));
+                                break;
+                            case EvaluationMetric.LIKE:
+                                Program.logger.Write("\t" + (finalResult[metric]));
+                                break;
+                            case EvaluationMetric.HIT:
+                                Program.logger.Write("\t" + (finalResult[metric]));
+                                break;
                         }
-                        logger.WriteLine();
-                        logger.Close();
                     }
+                    Program.logger.WriteLine("\t" + this.numOfFriend);
+                    Program.logger.Flush();
                 }
             }
-            catch (FileNotFoundException e)
+            catch (Exception e)
             {
-                Console.WriteLine(e);
+                Console.WriteLine(e.Message);
             }
         }
 
@@ -140,6 +142,7 @@ namespace TweetRecommender
                 DataLoader loader = p.loader;
                 Methodology methodology = p.methodology;
                 int fold = p.fold;
+                int nIteration = p.nIteration;
 
                 // #1 Core Part: 'EgoNetwork DB' --> 'Graph Strctures(Node, Edge)'
                 loader.setTrainTestSet(fold);
@@ -176,38 +179,55 @@ namespace TweetRecommender
 
                 // #3 Core Part: Recommendation list(Personalized PageRanking Algorithm)
                 Recommender recommender = new Recommender(graph);
-                var recommendation = recommender.Recommendation(0, 0.15f, this.nIteration); // '0': Ego Node's Index, '0.15f': Damping Factor
+                var recommendation = recommender.Recommendation(0, 0.15f, nIteration); // '0': Ego Node's Index, '0.15f': Damping Factor
 
                 // #4 Core Part: Validation - AP(Average Precision)
                 DataSet testSet = loader.getTestSet();
-                HashSet<long> egoLikedTweets = testSet.getEgoLikedTweets();  
-                int nHits = 0;
-                double AP = 0.0, sumPrecision = 0.0; // Average Precision
+                HashSet<long> egoLikedTweets = testSet.getEgoLikedTweets();
+                int hit = 0, like = 0;
+                double AP = 0.0, recall = 0.0; // Average Precision
                 for (int i = 0; i < recommendation.Count; i++)
                 {
                     if (egoLikedTweets.Contains(recommendation[i].Key))
                     {
-                        nHits += 1;
-                        sumPrecision += (double)nHits / (i + 1);
+                        hit += 1;
+                        AP += (double)hit / (i + 1);
                     }
                 }
-                if (nHits != 0)
-                    AP = sumPrecision / nHits;
+                // LIKE
+                like = (int)egoLikedTweets.Count;
+                // Average Precision & Recall
+                if (hit != 0)
+                {
+                    AP /= hit;
+                    recall = (double)hit / like;
+                }
                 else
+                {
                     AP = 0.0;
-                Console.WriteLine("Average Precision: " + AP);
+                    recall = 0.0;
+                }
 
                 // Add current result to final one
-                foreach (EvaluationMetric metric in this.metrics)
+                lock (Program.locker)
                 {
-                    switch (metric)
+                    foreach (EvaluationMetric metric in this.metrics)
                     {
-                        case EvaluationMetric.HIT:
-                            this.finalResult[metric] += nHits;
-                            break;
-                        case EvaluationMetric.AVGPRECISION:
-                            this.finalResult[metric] += AP;
-                            break;
+                        switch (metric)
+                        {
+                            case EvaluationMetric.MAP:
+                                this.finalResult[metric] += AP;
+                                break;
+                            case EvaluationMetric.RECALL:
+                                this.finalResult[metric] += recall;
+                                break;
+                            case EvaluationMetric.LIKE:
+                                this.finalResult[metric] += like;
+                                break;
+                            case EvaluationMetric.HIT:
+                                this.finalResult[metric] += hit;
+                                break;
+                        }
                     }
                 }
             }
