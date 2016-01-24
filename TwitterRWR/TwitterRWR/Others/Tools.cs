@@ -6,10 +6,10 @@ namespace TweetRecommender.Others
 { 
     public class Tools
     {
-        public static void printExecutionTime(Stopwatch stopwatch)
+        public static string getExecutionTime(Stopwatch stopwatch)
         {
             var timespan = TimeSpan.FromMilliseconds(stopwatch.ElapsedMilliseconds);
-            Console.WriteLine("Execution time: " + timespan.ToString());
+            return timespan.ToString();
         }
     }
 

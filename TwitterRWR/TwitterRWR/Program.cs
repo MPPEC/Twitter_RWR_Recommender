@@ -34,7 +34,7 @@ namespace TweetRecommender
         public static void Main(string[] args) 
         {
             Console.WriteLine("RWR-based Recommendation (" + DateTime.Now.ToString() + ")\n");
-            Stopwatch stopwatch = Stopwatch.StartNew(); // Stopwatch: C# Standard Library Class
+            Stopwatch programStopwatch = Stopwatch.StartNew(); // Stopwatch: C# Standard Library Class
 
             // Program arguments
             dirData = @args[0] + Path.DirectorySeparatorChar;           // Path of directory that containes SQLite DB files
@@ -49,7 +49,7 @@ namespace TweetRecommender
             {
                 StreamReader reader = new StreamReader(outFilePath);
                 string line;
-                reader.ReadLine(); // Discard First Line(Headline)
+                //reader.ReadLine(); // Discard First Line(Headline)
                 while ((line = reader.ReadLine()) != null) 
                 {
                     string[] tokens = line.Split('\t');
@@ -72,22 +72,29 @@ namespace TweetRecommender
 
             // Result File Format
             Program.logger = new StreamWriter(outFilePath, true);
-            Program.logger.WriteLine("{0}\t\t{1}\t{2}\t{3}\t{4}\t\t\t{5}\t\t\t{6}\t{7}\t{8}", "EGO", "Method", "Kfold", "Iter", "MAP", "RECALL", "LIKE", "HIT", "FRIEND");
+            //Program.logger.WriteLine("{0}\t\t{1}\t{2}\t{3}\t{4}\t\t\t{5}\t\t\t{6}\t{7}\t{8}", "EGO", "Method", "Kfold", "Iter", "MAP", "RECALL", "LIKE", "HIT", "FRIEND");
 
             // #Core Part: One .sqlite to One thread
-            semaphore = new Semaphore(nFolds, nFolds);
+            int cntSemaphore = 2;
+            semaphore = new Semaphore(cntSemaphore, cntSemaphore);
+            Stopwatch dbStopwatch = null; // Stopwatch: C# Standard Library Class
             foreach (string dbFile in sqliteDBs) 
             {
+                Console.WriteLine("Start Ego: " + Path.GetFileNameWithoutExtension(dbFile));
+                dbStopwatch = Stopwatch.StartNew();
                 Experiment experiment = new Experiment(dbFile);
                 experiment.startPersonalizedPageRank(nFolds, nIterations);
+                dbStopwatch.Stop();
+                Program.logger.WriteLine("\t" + Tools.getExecutionTime(dbStopwatch));
+                Program.logger.Flush();
             }
 
             // Close Output file
             Program.logger.Close();
 
             // Execution Time
-            stopwatch.Stop();
-            Tools.printExecutionTime(stopwatch);
+            programStopwatch.Stop();
+            Console.WriteLine("Execution Time: " + Tools.getExecutionTime(programStopwatch));
             Console.WriteLine("Finished!");
 
         }

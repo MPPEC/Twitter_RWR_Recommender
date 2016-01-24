@@ -121,8 +121,7 @@ namespace TweetRecommender
                                 break;
                         }
                     }
-                    Program.logger.WriteLine("\t" + this.numOfFriend);
-                    Program.logger.Flush();
+                    Program.logger.Write("\t" + this.numOfFriend);
                 }
             }
             catch (Exception e)
