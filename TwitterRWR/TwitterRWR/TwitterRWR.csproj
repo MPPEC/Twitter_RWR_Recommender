@@ -67,10 +67,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\DataSet.cs" />
+    <Compile Include="Data\Tweet.cs" />
     <Compile Include="Recommender.cs" />
     <Compile Include="SQLiteAdapter.cs" />
     <Compile Include="Data\User.cs" />
     <Compile Include="Others\Tools.cs" />
+    <None Include="Temporary\tempGraph.cs" />
+    <None Include="Temporary\tempModel.cs" />
     <None Include="Temporary\tempExperiment.cs" />
     <None Include="Temporary\tempProgram.cs" />
     <None Include="packages.config" />

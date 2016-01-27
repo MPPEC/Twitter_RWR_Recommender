@@ -1,38 +1,37 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using TweetRecommender.Others;
 // Personalized PageRank Algorithm
 namespace TweetRecommender
 {
     public class Model
     {
-        /*************************** Properties **************************************/
-        private ArrayList linkMatrix;
-        private double dampingFactor;
+        public Graph graph;
         public double[] rank;
         public double[] nextRank;
         public int nNodes;
-        public int egoNode;
 
-        /****************************** Constructor **********************************/
-        // Personalized PageRank Algorithm: All node do random jump to Ego node
+        public double dampingFactor;
+        public double[] restart;
+
         public Model(Graph graph, double dampingFactor, int targetNode)
         {
-            this.linkMatrix = graph.matrix;
+            this.graph = graph;
             this.nNodes = graph.getCntAllNodes();
             this.dampingFactor = dampingFactor;
-            this.egoNode = targetNode;
 
             rank = new double[nNodes];
             nextRank = new double[nNodes];
+            restart = new double[nNodes];
 
             for (int i = 0; i < nNodes; i++)
             {
                 // Initialize rank score of each node
                 rank[i] = (i == targetNode) ? nNodes : 0;
                 nextRank[i] = 0;
+
+                // Make restart weight
+                restart[i] = (i == targetNode) ? 1d : 0; // [1, 0, 0, 0, 0, ... , 0, 0, 0]: Personalized PageRank
             }
         }
 
@@ -49,6 +48,7 @@ namespace TweetRecommender
         // Deliver ranks along with forward links
         public void deliverRanks()
         {
+            ArrayList forwardLinks = graph.matrix; // <Node's Index, Outlinks>
             ForwardLink[] linkList = null;
             ForwardLink link;
             int nLinks;
@@ -56,10 +56,10 @@ namespace TweetRecommender
 
             for (int i = 0; i < nNodes; i++)
             {
-                linkList = (ForwardLink[])this.linkMatrix[i]; // 'i'th node links
+                linkList = (ForwardLink[])forwardLinks[i]; // 'i'th node links
                 nLinks = linkList.Length;
 
-                // Random Walk
+                // Deliver rank score with Random Walk
                 rank_randomWalk = (1 - dampingFactor) * rank[i];
                 for (int w = 0; w < nLinks; w++)
                 {
@@ -67,9 +67,15 @@ namespace TweetRecommender
                     nextRank[link.targetNode] += rank_randomWalk * link.weight;
                 }
 
-                // Random Jump: Personalized PageRank
+                // Deliver rank score with Restart(Random Jump)
                 rank_restart = dampingFactor * rank[i];
-                nextRank[this.egoNode] += rank_restart;
+                for (int r = 0; r < nNodes; r++)
+                    nextRank[r] += rank_restart * restart[r];
+
+                if ((i % 1000) == 0)
+                {
+                    Console.WriteLine("{0}", i);
+                }
             }
         }
 

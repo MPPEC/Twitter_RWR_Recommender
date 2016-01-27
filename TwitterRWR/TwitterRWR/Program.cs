@@ -10,93 +10,91 @@ using System.Threading.Tasks;
 
 namespace TweetRecommender 
 {
+    struct personalizedPageRankThreadParamters
+    {
+        public int kFold;
+        public int nIteration;
+        public Methodology methodology;
+
+        public personalizedPageRankThreadParamters(int kFold, int nIteration, Methodology methodology)
+        {
+            this.kFold = kFold;
+            this.nIteration = nIteration;
+            this.methodology = methodology;
+        }
+    }
+
     public class Program 
     {
         // To limit the number of multithreading concurrency
-        public static Semaphore semaphore;
+        public static Semaphore dbSemaphore;
 
         // To avoid file writer collision
-        public static Object locker = new Object();
-
-        // Path of directory that contains data files (*.sqlite)
-        public static string dirData;
-
-        // Methodologies: Experimental Codes List
-        public static List<Methodology> methodologies;
-
-        // Existing experimental result: To SKIP already performed experiments
-        public static Dictionary<long, List<int>> existingResults = new Dictionary<long, List<int>>(); // (<ego ID>, <{Experiments Codes}>)
+        public static Object outFileLocker = new Object();
 
         // For output file
         public static StreamWriter logger;
 
-        // Command line argument: C:\Users\M-PEC\Desktop\sample 0,1 5 10
+        // Command line argument: C:\Users\M-PEC\Desktop\TwitterDB RWR_MAP_Domain1_1.txt 1 5 15
         public static void Main(string[] args) 
         {
             Console.WriteLine("RWR-based Recommendation (" + DateTime.Now.ToString() + ")\n");
-            Stopwatch programStopwatch = Stopwatch.StartNew(); // Stopwatch: C# Standard Library Class
+            Stopwatch programStopwatch = Stopwatch.StartNew();
 
             // Program arguments
-            dirData = @args[0] + Path.DirectorySeparatorChar;           // Path of directory that containes SQLite DB files
-            string outFilePath = args[0] + "\\" + args[1];
-            Console.WriteLine(outFilePath);
-            string[] methodologyList = args[2].Split(',');              // The list of experimental codes (csv format; for example: 0,1,8,9,10,11,12 )
-            int nFolds = int.Parse(args[3]);                            // Number of folds
-            int nIterations = int.Parse(args[4]);                       // Number of iterations for RWR
+            string dirPath = args[0] + Path.DirectorySeparatorChar;     // Path of directory that containes SQLite DB files
+            string[] methodologyList = args[1].Split(',');              // The list of experimental codes (csv format; for example: 0,1,8,9,10,11,12 )
+            int kFolds = int.Parse(args[2]);                            // Number of folds
+            int nIterations = int.Parse(args[3]);                       // Number of iterations for RWR
 
-            // Load existing experimental results: SKIP already performed experiments
-            if (File.Exists(outFilePath)) 
-            {
-                StreamReader reader = new StreamReader(outFilePath);
-                string line;
-                //reader.ReadLine(); // Discard First Line(Headline)
-                while ((line = reader.ReadLine()) != null) 
-                {
-                    string[] tokens = line.Split('\t');
-                    long egouser = long.Parse(tokens[0]);
-                    int experiment = int.Parse(tokens[1]);
-                    if (!existingResults.ContainsKey(egouser))
-                        existingResults.Add(egouser, new List<int>());
-                    existingResults[egouser].Add(experiment);
-                }
-                reader.Close();
-            }
+            // DB(.sqlite) List
+            string[] dbCollection = Directory.GetFiles(dirPath, "*.sqlite");
 
-            // Run experiments using multi-threading
-            string[] sqliteDBs = Directory.GetFiles(dirData, "*.sqlite");
-
-            // Methodology list
-            methodologies = new List<Methodology>();
-            foreach (string methodology in methodologyList) // 'methodologyList' == args[1]
+            // Methodology list(Experiment Codes)
+            List<Methodology> methodologies = new List<Methodology>();
+            foreach (string methodology in methodologyList)
                 methodologies.Add((Methodology) int.Parse(methodology));
-
-            // Result File Format
-            Program.logger = new StreamWriter(outFilePath, true);
-            //Program.logger.WriteLine("{0}\t\t{1}\t{2}\t{3}\t{4}\t\t\t{5}\t\t\t{6}\t{7}\t{8}", "EGO", "Method", "Kfold", "Iter", "MAP", "RECALL", "LIKE", "HIT", "FRIEND");
 
             // #Core Part: One .sqlite to One thread
             int cntSemaphore = 2;
-            semaphore = new Semaphore(cntSemaphore, cntSemaphore);
-            Stopwatch dbStopwatch = null; // Stopwatch: C# Standard Library Class
-            foreach (string dbFile in sqliteDBs) 
+            Program.dbSemaphore = new Semaphore(cntSemaphore, cntSemaphore);
+            foreach (Methodology methodology in methodologies)
             {
-                Console.WriteLine("Start Ego: " + Path.GetFileNameWithoutExtension(dbFile));
-                dbStopwatch = Stopwatch.StartNew();
-                Experiment experiment = new Experiment(dbFile);
-                experiment.startPersonalizedPageRank(nFolds, nIterations);
-                dbStopwatch.Stop();
-                Program.logger.WriteLine("\t" + Tools.getExecutionTime(dbStopwatch));
-                Program.logger.Flush();
+                // Outfile Setting
+                string outFilePath = args[0] + Path.DirectorySeparatorChar + "RWR_MAP_Domain1_" + (int)methodology + ".txt";
+                Program.logger = new StreamWriter(outFilePath, false);
+
+                // Personalized PageRank: Multi-threading
+                Experiment experiment;
+                personalizedPageRankThreadParamters pagaRankParameters;
+                List<Thread> threadList = new List<Thread>();
+                foreach (string dbFile in dbCollection)
+                {
+                    try
+                    {
+                        // one Thread to one DB
+                        Program.dbSemaphore.WaitOne();
+                        Console.WriteLine("Ego {0} Start", Path.GetFileNameWithoutExtension(dbFile));
+                        experiment = new Experiment(dbFile);
+                        Thread thread = new Thread(experiment.startPersonalizedPageRank);
+                        pagaRankParameters = new personalizedPageRankThreadParamters(kFolds, nIterations, methodology);
+                        thread.Start(pagaRankParameters);
+                        threadList.Add(thread);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
+                foreach (Thread thread in threadList)
+                    thread.Join();
+                // Close Output file
+                Program.logger.Close();
             }
-
-            // Close Output file
-            Program.logger.Close();
-
             // Execution Time
             programStopwatch.Stop();
             Console.WriteLine("Execution Time: " + Tools.getExecutionTime(programStopwatch));
             Console.WriteLine("Finished!");
-
         }
     }
 }

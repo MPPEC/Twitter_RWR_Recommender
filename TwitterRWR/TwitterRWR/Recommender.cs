@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using TwitterRWR.Data;
+using System.Collections.Generic;
+using System.Collections;
+using System;
 
 namespace TweetRecommender
 { 
@@ -11,28 +14,30 @@ namespace TweetRecommender
             this.graph = graph;
         }
 
-        public List<KeyValuePair<long, double>> // <Tweet ID, Ranking Value>
+        public ArrayList // <Tweet ID, Ranking Value>
         Recommendation(int idxTargetUser, float dampingFactor, int nIteration) // <Ego Nodex Index>, <Random Jump Factor: To Ego>, <# of PageRank Multiplication>
         {
+            Console.WriteLine("PageRank Started");
             // Run Random Walk with Restart
             Model model = new Model(graph, dampingFactor, idxTargetUser);
             model.run(nIteration); // # Core Part
 
             // Sort candidate items(not alreday liked tweets) by their ranking score
-            var recommendation = new List<KeyValuePair<long, double>>();
+            ArrayList recommendation = new ArrayList();
             for (int i = 0; i < model.nNodes; i++) 
             {
+                // Suspicious Execution Time
                 if (graph.nodes[i].type == NodeType.CANDIDATE)
-                    recommendation.Add(new KeyValuePair<long, double>(graph.nodes[i].id, model.rank[i])); // <Tweet ID, Ranking Score>
+                    recommendation.Add(new Tweet(graph.nodes[i].id, model.rank[i])); // <Tweet ID, Ranking Score>
             }
 
+            Console.WriteLine("PageRank Finished");
             // Sort the candidate items (descending order)
             // Order by rank first, then by item id(time order; the latest one the higher order) -- Really??: 'Tweet ID' propotional 'Timestamp'
-            recommendation.Sort((one, another) => 
-            {
-                int result = one.Value.CompareTo(another.Value) * -1;
-                return result != 0 ? result : one.Key.CompareTo(another.Key) * -1;
-            });
+            recommendation.Sort(new TweetDateComparer());
+            recommendation.Sort(new TweetScoreComparer());
+            Console.WriteLine("Sroting Finished");
+
             return recommendation;
         }
     }

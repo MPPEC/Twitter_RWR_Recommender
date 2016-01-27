@@ -515,7 +515,7 @@ namespace TweetRecommender {
 
         public void printGraphInfo()
         {
-            lock (Program.locker)
+            lock (Program.outFileLocker)
             {
                 Console.WriteLine("\t* Graph information");
                 Console.WriteLine("\t\t- # of nodes: " + nNodes

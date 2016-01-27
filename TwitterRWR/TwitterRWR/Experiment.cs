@@ -1,9 +1,11 @@
 ﻿using TwitterRWR.Data;
+using TweetRecommender.Others;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading; // Multi-threading Library
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace TweetRecommender 
 {
@@ -19,14 +21,14 @@ namespace TweetRecommender
     public enum Feature { FRIENDSHIP, FOLLOWSHIP_ON_THIRDPARTY, AUTHORSHIP, MENTIONCOUNT } 
     public enum EvaluationMetric { MAP, RECALL, LIKE, HIT }
 
-    public struct ThreadParams 
+    public struct kFoldThreadParameter
     {
         public DataLoader loader;
         public Methodology methodology;
         public int fold; // kth fold
         public int nIteration;
 
-        public ThreadParams(DataLoader loader, Methodology methodology, int fold, int nIteration) 
+        public kFoldThreadParameter(DataLoader loader, Methodology methodology, int fold, int nIteration) 
         {
             this.loader = loader;
             this.methodology = methodology;
@@ -37,81 +39,83 @@ namespace TweetRecommender
 
     public class Experiment 
     {
-        /*************************** Properties **************************************/
+        // Properties
         private string dbPath;
         private Dictionary<EvaluationMetric, double> finalResult;
         private List<EvaluationMetric> metrics;
         private int numOfFriend;
 
-        /****************************** Constructor **********************************/
+        // K-fold Multi-threading
+        private Semaphore kFoldSemaphore;
+        private Object kFoldLocker = new Object();
+
+        // Constructors
         public Experiment(string dbPath)
         {
             this.dbPath = dbPath;
         }
 
-        /*******************************************************************************/
-        /***************************** Primary Methods *********************************/
-        /*******************************************************************************/
-        public void startPersonalizedPageRank(int nFold, int nIteration) 
+        // Primary Methods
+        public void startPersonalizedPageRank(object parameterObject) 
         {
+            Stopwatch pageRankStopwatch = Stopwatch.StartNew();
+            // PageRank Environment Setting
+            personalizedPageRankThreadParamters parameters = (personalizedPageRankThreadParamters)parameterObject;
+            int nFold = parameters.kFold;
+            int nIteration = parameters.nIteration;
+            Methodology methodology = parameters.methodology;
+
             try
-            {   
-                // Do experiments for each methodology
-                foreach (Methodology methodology in Program.methodologies)
+            {
+                // Get ego user's ID and his like count
+                long egoID = long.Parse(Path.GetFileNameWithoutExtension(this.dbPath));
+                
+                // Final result to put the experimental result per fold together
+                this.finalResult = new Dictionary<EvaluationMetric, double>(); // <'HIT(0)', double> or <'AVGPRECISION(1)', double>
+                foreach (EvaluationMetric metric in Enum.GetValues(typeof(EvaluationMetric)))
+                    this.finalResult.Add(metric, 0d); // Initialization
+
+                // Need to avoid the following error: "Collection was modified; enumeration operation may not execute"
+                metrics = new List<EvaluationMetric>(this.finalResult.Keys);
+
+                // K-Fold Cross Validation
+                kFoldSemaphore = new Semaphore(nFold, nFold);
+                List<Thread> kFoldThreadList = new List<Thread>(); // 'Thread': Standard Library Class
+                for (int fold = 0; fold < 1; fold++) // // One fold to One thread
                 {
-                    // Get ego user's ID and his like count
-                    long egoUser = long.Parse(Path.GetFileNameWithoutExtension(this.dbPath));
+                    // Load graph information from database and then configurate the graph
+                    DataLoader loader = new DataLoader(this.dbPath);
+                    loader.setEgoNetwork();
+                    loader.setEgoTimeline();
+                    loader.splitTimelineToKfolds(nFold);
+                    // |Friend|
+                    this.numOfFriend = loader.getNumOfFriend();
+                    // Multi-Threading
+                    kFoldSemaphore.WaitOne(); // Wait until Semaphore released
+                    Thread thread = new Thread(new ParameterizedThreadStart(runKfoldCrossValidation));
+                    kFoldThreadParameter kFoldparameters = new kFoldThreadParameter(loader, methodology, fold, nIteration); // 'ThreadParams': defined in 'Experiment.cs'
+                    thread.Start(kFoldparameters);
+                    kFoldThreadList.Add(thread);
+                }
+                // Synchronization: Wait until threads be terminated
+                foreach (Thread thread in kFoldThreadList)
+                    thread.Join();
 
-                    // Check if this experiment has ever been performed earlier
-                    int m = (int)methodology;
-                    if (Program.existingResults.ContainsKey(egoUser) && Program.existingResults[egoUser].Contains(m))
-                    {
-                        lock (Program.locker)
-                        {
-                            Console.WriteLine("Ego network(" + egoUser + "): done on experiment #" + m);
-                        }
-                        continue;
-                    }
+                // Result: <Ego ID>\t<Experi Code>\t<N-fold>\t<iteration>\t<MAP>\t<Recall>\t<|LIKE|>\t<|HIT|>\t<|Friend|>
+                pageRankStopwatch.Stop();
+                lock(Program.outFileLocker)
+                {
 
-                    // Final result to put the experimental result per fold together
-                    this.finalResult = new Dictionary<EvaluationMetric, double>(); // <'HIT(0)', double> or <'AVGPRECISION(1)', double>
-                    foreach (EvaluationMetric metric in Enum.GetValues(typeof(EvaluationMetric)))
-                        this.finalResult.Add(metric, 0d); // Initialization
-
-                    // Need to avoid the following error: "Collection was modified; enumeration operation may not execute"
-                    metrics = new List<EvaluationMetric>(this.finalResult.Keys);
-
-                    // K-Fold Cross Validation
-                    List<Thread> threadList = new List<Thread>(); // 'Thread': Standard Library Class
-                    for (int fold = 0; fold < nFold; fold++) // // One fold to One thread
-                    {
-                        // Load graph information from database and then configurate the graph
-                        DataLoader loader = new DataLoader(this.dbPath);
-                        loader.setEgoNetwork();
-                        loader.setEgoTimeline();
-                        loader.splitTimelineToKfolds(nFold);
-                        // |Friend|
-                        this.numOfFriend = loader.getNumOfFriend();
-                        Thread thread = new Thread(new ParameterizedThreadStart(runKfoldCrossValidation)); // Core Part
-                        ThreadParams parameters = new ThreadParams(loader, methodology, fold, nIteration); // 'ThreadParams': defined in 'Experiment.cs'
-                        thread.Start(parameters);
-                        threadList.Add(thread);
-                    }
-                    // Synchronization: Wait until threads be terminated
-                    foreach (Thread thread in threadList)
-                        thread.Join();
-
-                    // Result: <Ego ID>\t<Experi Code>\t<N-fold>\t<iteration>\t<MAP>\t<Recall>\t<|LIKE|>\t<|HIT|>\t<|Friend|>
-                    Program.logger.Write(egoUser + "\t" + (int)methodology + "\t" + nFold + "\t" + nIteration);
+                    Program.logger.Write(egoID + "\t" + (int)methodology + "\t" + nFold + "\t" + nIteration);
                     foreach (EvaluationMetric metric in metrics)
                     {
                         switch (metric)
                         {
                             case EvaluationMetric.MAP:
-                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / nFold));
+                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / 1));
                                 break;
                             case EvaluationMetric.RECALL:
-                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / nFold));
+                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / 1));
                                 break;
                             case EvaluationMetric.LIKE:
                                 Program.logger.Write("\t" + (finalResult[metric]));
@@ -121,12 +125,22 @@ namespace TweetRecommender
                                 break;
                         }
                     }
+                    // |Friend|
                     Program.logger.Write("\t" + this.numOfFriend);
+                    // Output Execution Time
+                    Program.logger.WriteLine("\t" + Tools.getExecutionTime(pageRankStopwatch));
+                    Program.logger.Flush();
                 }
+
+ 
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                Program.dbSemaphore.Release();
             }
         }
 
@@ -134,10 +148,8 @@ namespace TweetRecommender
         {
             try
             {
-                Program.semaphore.WaitOne(); // Wait until Semaphore released
-
                 // Setting environment for experiments
-                ThreadParams p = (ThreadParams)parameters;
+                kFoldThreadParameter p = (kFoldThreadParameter)parameters;
                 DataLoader loader = p.loader;
                 Methodology methodology = p.methodology;
                 int fold = p.fold;
@@ -178,7 +190,7 @@ namespace TweetRecommender
 
                 // #3 Core Part: Recommendation list(Personalized PageRanking Algorithm)
                 Recommender recommender = new Recommender(graph);
-                var recommendation = recommender.Recommendation(0, 0.15f, nIteration); // '0': Ego Node's Index, '0.15f': Damping Factor
+                var recommendation = recommender.Recommendation(0, 0.30f, nIteration); // '0': Ego Node's Index, '0.15f': Damping Factor
 
                 // #4 Core Part: Validation - AP(Average Precision)
                 DataSet testSet = loader.getTestSet();
@@ -187,7 +199,7 @@ namespace TweetRecommender
                 double AP = 0.0, recall = 0.0; // Average Precision
                 for (int i = 0; i < recommendation.Count; i++)
                 {
-                    if (egoLikedTweets.Contains(recommendation[i].Key))
+                    if (egoLikedTweets.Contains(((Tweet)recommendation[i]).ID))
                     {
                         hit += 1;
                         AP += (double)hit / (i + 1);
@@ -208,7 +220,7 @@ namespace TweetRecommender
                 }
 
                 // Add current result to final one
-                lock (Program.locker)
+                lock (kFoldLocker)
                 {
                     foreach (EvaluationMetric metric in this.metrics)
                     {
@@ -236,7 +248,7 @@ namespace TweetRecommender
             }
             finally
             {
-                Program.semaphore.Release();
+                kFoldSemaphore.Release();
             }
         }
     }

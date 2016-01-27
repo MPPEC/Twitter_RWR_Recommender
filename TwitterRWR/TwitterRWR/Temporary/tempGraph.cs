@@ -88,16 +88,6 @@ namespace TweetRecommender
                         for (int f = 0; f < nExplicitLinks; f++)
                             forwardLinks[f].weight /= sumWeights;
                     }
-                    else
-                    {
-                        forwardLinks = new ForwardLink[nodes.Count];
-                        double weight = 1.0 / nodes.Count;
-                        for (int j = 0; j < nodes.Count; j++)
-                        {
-                            ForwardLink virtualLink = new ForwardLink(j, EdgeType.VIRTUAL, weight);
-                            forwardLinks[j] = virtualLink;
-                        }
-                    }
                 }
                 // Dangling node: Add virtual links to all nodes(include itself)
                 else
@@ -110,12 +100,9 @@ namespace TweetRecommender
                         forwardLinks[j] = virtualLink;
                     }
                 }
+                // Add filterd forward links of 'i'th node
                 matrix.Add(forwardLinks);
             }
-            int allLinkCount = 0;
-            foreach (ForwardLink[] link in matrix)
-                allLinkCount += link.Length;
-            Console.WriteLine("Total Link(With Virtual Link for Dangling Nodes): " + allLinkCount);
         }
 
         // Get the number of nodes in the graph

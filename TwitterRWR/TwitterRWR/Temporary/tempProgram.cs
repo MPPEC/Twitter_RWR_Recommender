@@ -13,7 +13,7 @@ namespace TweetRecommender
     public class Program
     {
         // To limit the number of multithreading concurrency
-        public static Semaphore semaphore = new Semaphore(10, 10);
+        public static Semaphore semaphore;
 
         // To avoid file writer collision
         public static Object locker = new Object();
@@ -27,28 +27,32 @@ namespace TweetRecommender
         // Existing experimental result: To SKIP already performed experiments
         public static Dictionary<long, List<int>> existingResults = new Dictionary<long, List<int>>(); // (<ego ID>, <{Experiments Codes}>)
 
-        // Command line argument: C:\Users\M-PEC\Desktop\sample 0,1 5 10
+        // For output file
+        public static StreamWriter logger;
+
+        // Command line argument: C:\Users\M-PEC\Desktop\TwitterDB RWR_MAP_Domain1_1.txt 1 5 15
         public static void Main(string[] args)
         {
             Console.WriteLine("RWR-based Recommendation (" + DateTime.Now.ToString() + ")\n");
-            Stopwatch stopwatch = Stopwatch.StartNew(); // Stopwatch: C# Standard Library Class
+            Stopwatch programStopwatch = Stopwatch.StartNew(); // Stopwatch: C# Standard Library Class
 
             // Program arguments
             dirData = @args[0] + Path.DirectorySeparatorChar;           // Path of directory that containes SQLite DB files
-            string[] methodologyList = args[1].Split(',');              // The list of experimental codes (csv format; for example: 0,1,8,9,10,11,12 )
-            int nFolds = int.Parse(args[2]);                            // Number of folds
-            int nIterations = int.Parse(args[3]);                       // Number of iterations for RWR
+            string outFilePath = args[0] + "\\" + args[1];
+            Console.WriteLine(outFilePath);
+            string[] methodologyList = args[2].Split(',');              // The list of experimental codes (csv format; for example: 0,1,8,9,10,11,12 )
+            int nFolds = int.Parse(args[3]);                            // Number of folds
+            int nIterations = int.Parse(args[4]);                       // Number of iterations for RWR
 
             // Load existing experimental results: SKIP already performed experiments
-            if (File.Exists(dirData + "result.txt"))
+            if (File.Exists(outFilePath))
             {
-                StreamReader reader = new StreamReader(dirData + "result.txt");
+                StreamReader reader = new StreamReader(outFilePath);
                 string line;
+                //reader.ReadLine(); // Discard First Line(Headline)
                 while ((line = reader.ReadLine()) != null)
                 {
                     string[] tokens = line.Split('\t');
-                    if (tokens.Length != 7)
-                        continue;
                     long egouser = long.Parse(tokens[0]);
                     int experiment = int.Parse(tokens[1]);
                     if (!existingResults.ContainsKey(egouser))
@@ -60,28 +64,43 @@ namespace TweetRecommender
 
             // Run experiments using multi-threading
             string[] sqliteDBs = Directory.GetFiles(dirData, "*.sqlite");
-            List<Thread> threadList = new List<Thread>(); // 'Thread': Standard Library Class
 
             // Methodology list
             methodologies = new List<Methodology>();
             foreach (string methodology in methodologyList) // 'methodologyList' == args[1]
                 methodologies.Add((Methodology)int.Parse(methodology));
 
-            // One .sqlite to One thread
+            // Result File Format
+            Program.logger = new StreamWriter(outFilePath, true);
+            //Program.logger.WriteLine("{0}\t\t{1}\t{2}\t{3}\t{4}\t\t\t{5}\t\t\t{6}\t{7}\t{8}", "EGO", "Method", "Kfold", "Iter", "MAP", "RECALL", "LIKE", "HIT", "FRIEND");
+
+            // #Core Part: One .sqlite to One thread
+            bool alreadyExperimented;
+            int cntSemaphore = 1;
+            semaphore = new Semaphore(cntSemaphore, cntSemaphore);
+            Stopwatch dbStopwatch = null; // Stopwatch: C# Standard Library Class
             foreach (string dbFile in sqliteDBs)
             {
-                Thread thread = new Thread(new ParameterizedThreadStart(Experiment.personalizedPageRank)); // Core Part
-                ThreadParams parameters = new ThreadParams(dbFile, nFolds, nIterations); // 'ThreadParams': defined in 'Experiment.cs'
-                thread.Start(parameters);
-                threadList.Add(thread);
+                Console.WriteLine("Start Ego: " + Path.GetFileNameWithoutExtension(dbFile));
+                dbStopwatch = Stopwatch.StartNew();
+                Experiment experiment = new Experiment(dbFile);
+                alreadyExperimented = experiment.startPersonalizedPageRank(nFolds, nIterations);
+                dbStopwatch.Stop();
+                if (alreadyExperimented == true)
+                {
+                    Program.logger.WriteLine("\t" + Tools.getExecutionTime(dbStopwatch));
+                    Program.logger.Flush();
+                }
             }
-            // Synchronization: Wait until threads be terminated
-            foreach (Thread thread in threadList)
-                thread.Join();
 
-            stopwatch.Stop();
-            Tools.printExecutionTime(stopwatch);
+            // Close Output file
+            Program.logger.Close();
+
+            // Execution Time
+            programStopwatch.Stop();
+            Console.WriteLine("Execution Time: " + Tools.getExecutionTime(programStopwatch));
             Console.WriteLine("Finished!");
+
         }
     }
 }
