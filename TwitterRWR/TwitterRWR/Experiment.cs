@@ -14,9 +14,10 @@ namespace TweetRecommender
         BASELINE,
         INCL_FRIENDSHIP, INCL_FOLLOWSHIP_ON_THIRDPARTY, INCL_AUTHORSHIP, INCL_MENTIONCOUNT,
         INCL_ALLFOLLOWSHIP, INCL_FRIENDSHIP_AUTHORSHIP, INCL_FRIENDSHIP_MENTIONCOUNT,
-        ALL,
+        INCL_FOLLOWSHIP_ON_THIRDPARTY_AND_AUTHORSHIP, INCL_FOLLOWSHIP_ON_THIRDPARTY_AND_MENTIONCOUNT,
+        INCL_AUTHORSHIP_AND_MENTIONCOUNT,
         EXCL_FRIENDSHIP, EXCL_FOLLOWSHIP_ON_THIRDPARTY, EXCL_AUTHORSHIP, EXCL_MENTIONCOUNT,
-        INCL_FOLLOWSHIP_ON_THIRDPARTY_AND_AUTHORSHIP, INCL_FOLLOWSHIP_ON_THIRDPARTY_AND_MENTIONCOUNT, INCL_AUTHORSHIP_AND_MENTIONCOUNT
+        ALL
     }
     public enum Feature { FRIENDSHIP, FOLLOWSHIP_ON_THIRDPARTY, AUTHORSHIP, MENTIONCOUNT } 
     public enum EvaluationMetric { MAP, RECALL, LIKE, HIT }
@@ -81,7 +82,7 @@ namespace TweetRecommender
                 // K-Fold Cross Validation
                 kFoldSemaphore = new Semaphore(nFold, nFold);
                 List<Thread> kFoldThreadList = new List<Thread>(); // 'Thread': Standard Library Class
-                for (int fold = 0; fold < 1; fold++) // // One fold to One thread
+                for (int fold = 0; fold < nFold; fold++) // // One fold to One thread
                 {
                     // Load graph information from database and then configurate the graph
                     DataLoader loader = new DataLoader(this.dbPath);
@@ -112,10 +113,10 @@ namespace TweetRecommender
                         switch (metric)
                         {
                             case EvaluationMetric.MAP:
-                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / 1));
+                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / nFold));
                                 break;
                             case EvaluationMetric.RECALL:
-                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / 1));
+                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / nFold));
                                 break;
                             case EvaluationMetric.LIKE:
                                 Program.logger.Write("\t" + (finalResult[metric]));
@@ -131,8 +132,6 @@ namespace TweetRecommender
                     Program.logger.WriteLine("\t" + Tools.getExecutionTime(pageRankStopwatch));
                     Program.logger.Flush();
                 }
-
- 
             }
             catch (Exception e)
             {

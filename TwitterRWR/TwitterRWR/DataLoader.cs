@@ -67,14 +67,17 @@ namespace TweetRecommender {
                 followee.setQuotes(dbAdapter.getQuoteList(followee));
                 followee.setFavorites(dbAdapter.getFavoriteList(followee));
                 followee.updateLikedTweets();
-                // Filtering: Only Friends
+                // CASE 1: All of followees including friends
+                //followeeTable.Add(followee.ID, followee);
+                //if (egoUser.isFriend(followee))
+                //    this.numOfFriend++;
+                // CASE 2: Only Friends
                 if (egoUser.isFriend(followee))
                 {
                     followeeTable.Add(followee.ID, followee);
                     this.numOfFriend++;
-                }      
+                }
             }
-            Console.WriteLine("|Friend| " + followeeTable.Count);
 
             // Member table: egoUser U followee
             memberTable = new Hashtable();
@@ -101,7 +104,6 @@ namespace TweetRecommender {
                     this.egoTimeline.Add(tweet);
                 }
             }
-            Console.WriteLine("|Total Timeline|: " + this.egoTimeline.Count);
         }
 
         // Return: Ego Timeline --> Boundary of K sub-timelines --> K sub-datasets
@@ -129,8 +131,6 @@ namespace TweetRecommender {
                         this.dataSets[i].addEgoUnLikedTweetInTimeline(tweet);
                 }
             }
-            // # of liked tweets in ego timeline
-            Console.WriteLine("|Liked Tweets in Timeline|: " + timelineLikeCount);
         }
 
         // Return: K-fold 'trainset' and 'testset'
@@ -269,7 +269,7 @@ namespace TweetRecommender {
                 addMentionCount();
 
             // Print out the graph information
-            printGraphInfo();
+            //printGraphInfo();
 
             // Close DB connection
             this.dbAdapter.closeDB();
@@ -398,9 +398,10 @@ namespace TweetRecommender {
 
         public void addFollowship(bool includeFriendShip, bool includeFollowshipOnThirdparty)
         {
-            // Friendship Featrue
+            
             if (includeFriendShip)
             {
+                // CASE 1: Friendship Featrue (ego - ego's followee, ego's followee - ego's followee)
                 ICollection memberList1 = memberTable.Values;
                 foreach(User member1 in memberList1)
                 {
@@ -418,6 +419,18 @@ namespace TweetRecommender {
                         }
                     }
                 }
+                // CASE 2: Friendship Featrue (Only ego - ego's followee)
+                /*ICollection followeeList = followeeTable.Values;
+                foreach (User followee in followeeList)
+                {
+                    if (this.egoUser.isFriend(followee))
+                    {
+                        // Add links between members; the member nodes are already included in graph
+                        addLink(memberIDtoIndex[this.egoUser.ID], memberIDtoIndex[followee.ID], EdgeType.FRIENDSHIP, 1);
+                        addLink(memberIDtoIndex[followee.ID], memberIDtoIndex[this.egoUser.ID], EdgeType.FRIENDSHIP, 1);
+                    }
+                }*/
+
             }
             if (includeFollowshipOnThirdparty)
             {

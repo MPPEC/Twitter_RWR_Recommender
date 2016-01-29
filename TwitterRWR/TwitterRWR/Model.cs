@@ -42,7 +42,6 @@ namespace TweetRecommender
             {
                 deliverRanks();
                 updateRanks();
-                Console.WriteLine("{0}th Iteration Finished", n + 1);
             }
         }
 

@@ -56,12 +56,12 @@ namespace TweetRecommender
                 methodologies.Add((Methodology) int.Parse(methodology));
 
             // #Core Part: One .sqlite to One thread
-            int cntSemaphore = 2;
+            int cntSemaphore = 1;
             Program.dbSemaphore = new Semaphore(cntSemaphore, cntSemaphore);
             foreach (Methodology methodology in methodologies)
             {
                 // Outfile Setting
-                string outFilePath = args[0] + Path.DirectorySeparatorChar + "RWR_MAP_Domain1_" + (int)methodology + ".txt";
+                string outFilePath = args[0] + Path.DirectorySeparatorChar + "RWR_MAP_Friend_Domain1_" + (int)methodology + ".txt";
                 Program.logger = new StreamWriter(outFilePath, false);
 
                 // Personalized PageRank: Multi-threading
