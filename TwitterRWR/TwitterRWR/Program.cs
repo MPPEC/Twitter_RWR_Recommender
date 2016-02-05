@@ -35,7 +35,13 @@ namespace TweetRecommender
         // For output file
         public static StreamWriter logger;
 
-        // Command line argument: C:\Users\M-PEC\Desktop\TwitterDB RWR_MAP_Domain1_1.txt 1 5 15
+        // Environment Setting
+        public static int egoLikeThresholdInTestSet;
+        public static bool isValidTrainSet; // |Likes in TrainSet| >= constraintCntLikeOfEgoInTestSet
+        public static bool isOnlyFriendInEgoNetwork;
+        public static bool isGenericFriendship;
+
+        // Command line argument: C:\Users\M-PEC\Desktop\TwitterDB 0 10 15 50 1 1
         public static void Main(string[] args) 
         {
             Console.WriteLine("RWR-based Recommendation (" + DateTime.Now.ToString() + ")\n");
@@ -46,6 +52,9 @@ namespace TweetRecommender
             string[] methodologyList = args[1].Split(',');              // The list of experimental codes (csv format; for example: 0,1,8,9,10,11,12 )
             int kFolds = int.Parse(args[2]);                            // Number of folds
             int nIterations = int.Parse(args[3]);                       // Number of iterations for RWR
+            egoLikeThresholdInTestSet = int.Parse(args[4]);
+            isOnlyFriendInEgoNetwork = (int.Parse(args[5]) == 1) ? true : false;
+            isGenericFriendship = (int.Parse(args[6]) == 1) ? true : false;
 
             // DB(.sqlite) List
             string[] dbCollection = Directory.GetFiles(dirPath, "*.sqlite");
@@ -61,8 +70,24 @@ namespace TweetRecommender
             foreach (Methodology methodology in methodologies)
             {
                 // Outfile Setting
-                string outFilePath = args[0] + Path.DirectorySeparatorChar + "RWR_MAP_Friend_Domain1_" + (int)methodology + ".txt";
-                Program.logger = new StreamWriter(outFilePath, false);
+                string outFilePath = args[0] + Path.DirectorySeparatorChar + "RWR_MAP_10Split_Friend_Domain1_" + (int)methodology + "_Friendship0.txt";
+                
+                // Load existing experimental results: SKIP already performed experiments
+                HashSet<long> alreadyPerformedEgoList = new HashSet<long>(); // (<ego ID>, <{Experiments Codes}>)
+                if (File.Exists(outFilePath))
+                {
+                    using (StreamReader reader = new StreamReader(outFilePath))
+                    {
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            string[] tokens = line.Split('\t');
+                            long egoUser = long.Parse(tokens[0]);
+                            alreadyPerformedEgoList.Add(egoUser);
+                        }
+                    }
+                }
+                Program.logger = new StreamWriter(outFilePath, true);
 
                 // Personalized PageRank: Multi-threading
                 Experiment experiment;
@@ -70,11 +95,17 @@ namespace TweetRecommender
                 List<Thread> threadList = new List<Thread>();
                 foreach (string dbFile in dbCollection)
                 {
+                    long egoID = long.Parse(Path.GetFileNameWithoutExtension(dbFile));
+                    if (alreadyPerformedEgoList.Contains(egoID) == true)
+                    {
+                        Console.WriteLine("Ego {0} Already Performend", egoID);
+                        continue;
+                    }                     
                     try
                     {
                         // one Thread to one DB
                         Program.dbSemaphore.WaitOne();
-                        Console.WriteLine("Ego {0} Start", Path.GetFileNameWithoutExtension(dbFile));
+                        Console.WriteLine("Ego {0} Start", egoID);
                         experiment = new Experiment(dbFile);
                         Thread thread = new Thread(experiment.startPersonalizedPageRank);
                         pagaRankParameters = new personalizedPageRankThreadParamters(kFolds, nIterations, methodology);

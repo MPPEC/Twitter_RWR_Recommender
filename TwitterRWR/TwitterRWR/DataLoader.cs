@@ -67,15 +67,22 @@ namespace TweetRecommender {
                 followee.setQuotes(dbAdapter.getQuoteList(followee));
                 followee.setFavorites(dbAdapter.getFavoriteList(followee));
                 followee.updateLikedTweets();
-                // CASE 1: All of followees including friends
-                //followeeTable.Add(followee.ID, followee);
-                //if (egoUser.isFriend(followee))
-                //    this.numOfFriend++;
-                // CASE 2: Only Friends
-                if (egoUser.isFriend(followee))
+
+                if (Program.isOnlyFriendInEgoNetwork == true)
                 {
+                    // CASE 1: Only Friends
+                    if (egoUser.isFriend(followee))
+                    {
+                        followeeTable.Add(followee.ID, followee);
+                        this.numOfFriend++;
+                    }
+                }
+                else
+                {
+                    // CASE 2: All of followees including friends
                     followeeTable.Add(followee.ID, followee);
-                    this.numOfFriend++;
+                    if (egoUser.isFriend(followee))
+                        this.numOfFriend++;
                 }
             }
 
@@ -159,6 +166,11 @@ namespace TweetRecommender {
                     trainSet.addEgoLikedTweet(tweet);
                 }
             }
+            // Only Recommend on Ego: |Likes of Ego in TrainSet| >= threshold
+            if (testSet.getCntEgoLikedTweets() < Program.egoLikeThresholdInTestSet)
+                Program.isValidTrainSet = false;
+            else
+                Program.isValidTrainSet = true;
         }
 
         // #1 Main Part
@@ -194,43 +206,44 @@ namespace TweetRecommender {
                     features.Add(Feature.FRIENDSHIP);
                     features.Add(Feature.MENTIONCOUNT);
                     break;
-                case Methodology.ALL:                               // 8
-                    features.Add(Feature.FRIENDSHIP);
+                case Methodology.INCL_FOLLOWSHIP_ON_THIRDPARTY_AND_AUTHORSHIP:      // 8
                     features.Add(Feature.FOLLOWSHIP_ON_THIRDPARTY);
+                    features.Add(Feature.AUTHORSHIP);
+                    break;
+                case Methodology.INCL_FOLLOWSHIP_ON_THIRDPARTY_AND_MENTIONCOUNT:    // 9
+                    features.Add(Feature.FRIENDSHIP);                               // temporarily included
+                    features.Add(Feature.FOLLOWSHIP_ON_THIRDPARTY);
+                    features.Add(Feature.MENTIONCOUNT);
+                    break;
+                case Methodology.INCL_AUTHORSHIP_AND_MENTIONCOUNT:                  // 10
+                    features.Add(Feature.FRIENDSHIP);               // temporarily included
                     features.Add(Feature.AUTHORSHIP);
                     features.Add(Feature.MENTIONCOUNT);
                     break;
-                case Methodology.EXCL_FRIENDSHIP:                   // 9
+                case Methodology.EXCL_FRIENDSHIP:                   // 11
                     features.Add(Feature.FRIENDSHIP);               // temporarily included
                     features.Add(Feature.FOLLOWSHIP_ON_THIRDPARTY);
                     features.Add(Feature.AUTHORSHIP);
                     features.Add(Feature.MENTIONCOUNT);
                     break;
-                case Methodology.EXCL_FOLLOWSHIP_ON_THIRDPARTY:     // 10
+                case Methodology.EXCL_FOLLOWSHIP_ON_THIRDPARTY:     // 12
                     features.Add(Feature.FRIENDSHIP);
                     features.Add(Feature.AUTHORSHIP);
                     features.Add(Feature.MENTIONCOUNT);
                     break;
-                case Methodology.EXCL_AUTHORSHIP:                   // 11
+                case Methodology.EXCL_AUTHORSHIP:                   // 13
                     features.Add(Feature.FRIENDSHIP);
                     features.Add(Feature.FOLLOWSHIP_ON_THIRDPARTY);
                     features.Add(Feature.MENTIONCOUNT);
                     break;
-                case Methodology.EXCL_MENTIONCOUNT:                 // 12
+                case Methodology.EXCL_MENTIONCOUNT:                 // 14
                     features.Add(Feature.FRIENDSHIP);
                     features.Add(Feature.FOLLOWSHIP_ON_THIRDPARTY);
                     features.Add(Feature.AUTHORSHIP);
                     break;
-                case Methodology.INCL_FOLLOWSHIP_ON_THIRDPARTY_AND_AUTHORSHIP:      // 13
+                case Methodology.ALL:                               // 15
+                    features.Add(Feature.FRIENDSHIP);
                     features.Add(Feature.FOLLOWSHIP_ON_THIRDPARTY);
-                    features.Add(Feature.AUTHORSHIP);
-                    break;
-                case Methodology.INCL_FOLLOWSHIP_ON_THIRDPARTY_AND_MENTIONCOUNT:    // 14
-                    features.Add(Feature.FRIENDSHIP);                               // temporarily included
-                    features.Add(Feature.FOLLOWSHIP_ON_THIRDPARTY);
-                    features.Add(Feature.MENTIONCOUNT);
-                    break;
-                case Methodology.INCL_AUTHORSHIP_AND_MENTIONCOUNT:                  // 15
                     features.Add(Feature.AUTHORSHIP);
                     features.Add(Feature.MENTIONCOUNT);
                     break;
@@ -269,7 +282,7 @@ namespace TweetRecommender {
                 addMentionCount();
 
             // Print out the graph information
-            //printGraphInfo();
+            printGraphInfo();
 
             // Close DB connection
             this.dbAdapter.closeDB();
@@ -401,36 +414,41 @@ namespace TweetRecommender {
             
             if (includeFriendShip)
             {
-                // CASE 1: Friendship Featrue (ego - ego's followee, ego's followee - ego's followee)
-                ICollection memberList1 = memberTable.Values;
-                foreach(User member1 in memberList1)
+                if (Program.isGenericFriendship == true)
                 {
-                    ICollection memberList2 = memberTable.Values;
-                    foreach(User member2 in memberList2)
+                    // CASE 1: Friendship Featrue (ego - ego's followee, ego's followee - ego's followee)
+                    ICollection memberList1 = memberTable.Values;
+                    foreach (User member1 in memberList1)
                     {
-                        if (member1.ID != member2.ID)
+                        ICollection memberList2 = memberTable.Values;
+                        foreach (User member2 in memberList2)
                         {
-                            if (member1.isFriend(member2))
+                            if (member1.ID != member2.ID)
                             {
-                                // Add links between members; the member nodes are already included in graph
-                                addLink(memberIDtoIndex[member1.ID], memberIDtoIndex[member2.ID], EdgeType.FRIENDSHIP, 1);
-                                addLink(memberIDtoIndex[member2.ID], memberIDtoIndex[member1.ID], EdgeType.FRIENDSHIP, 1);
+                                if (member1.isFriend(member2))
+                                {
+                                    // Add links between members; the member nodes are already included in graph
+                                    addLink(memberIDtoIndex[member1.ID], memberIDtoIndex[member2.ID], EdgeType.FRIENDSHIP, 1);
+                                    addLink(memberIDtoIndex[member2.ID], memberIDtoIndex[member1.ID], EdgeType.FRIENDSHIP, 1);
+                                }
                             }
                         }
                     }
                 }
-                // CASE 2: Friendship Featrue (Only ego - ego's followee)
-                /*ICollection followeeList = followeeTable.Values;
-                foreach (User followee in followeeList)
+                else
                 {
-                    if (this.egoUser.isFriend(followee))
+                    // CASE 2: Friendship Featrue (Only ego - ego's followee)
+                    ICollection followeeList = followeeTable.Values;
+                    foreach (User followee in followeeList)
                     {
-                        // Add links between members; the member nodes are already included in graph
-                        addLink(memberIDtoIndex[this.egoUser.ID], memberIDtoIndex[followee.ID], EdgeType.FRIENDSHIP, 1);
-                        addLink(memberIDtoIndex[followee.ID], memberIDtoIndex[this.egoUser.ID], EdgeType.FRIENDSHIP, 1);
+                        if (this.egoUser.isFriend(followee))
+                        {
+                            // Add links between members; the member nodes are already included in graph
+                            addLink(memberIDtoIndex[this.egoUser.ID], memberIDtoIndex[followee.ID], EdgeType.FRIENDSHIP, 1);
+                            addLink(memberIDtoIndex[followee.ID], memberIDtoIndex[this.egoUser.ID], EdgeType.FRIENDSHIP, 1);
+                        }
                     }
-                }*/
-
+                }
             }
             if (includeFollowshipOnThirdparty)
             {

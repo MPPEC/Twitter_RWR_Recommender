@@ -112,12 +112,12 @@ namespace TweetRecommender
                 }
                 matrix.Add(forwardLinks);
             }
- /*
+ 
             int allLinkCount = 0;
             foreach (ForwardLink[] link in matrix)
                 allLinkCount += link.Length;
             Console.WriteLine("Total Link(With Virtual Link for Dangling Nodes): " + allLinkCount);
-*/
+
         }
 
         // Get the number of nodes in the graph

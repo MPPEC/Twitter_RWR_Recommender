@@ -82,7 +82,7 @@ namespace TweetRecommender
                 // K-Fold Cross Validation
                 kFoldSemaphore = new Semaphore(nFold, nFold);
                 List<Thread> kFoldThreadList = new List<Thread>(); // 'Thread': Standard Library Class
-                for (int fold = 0; fold < nFold; fold++) // // One fold to One thread
+                for (int fold = 0; fold < 1; fold++) // One fold to One thread
                 {
                     // Load graph information from database and then configurate the graph
                     DataLoader loader = new DataLoader(this.dbPath);
@@ -102,6 +102,8 @@ namespace TweetRecommender
                 foreach (Thread thread in kFoldThreadList)
                     thread.Join();
 
+                if (Program.isValidTrainSet == false)
+                    return;
                 // Result: <Ego ID>\t<Experi Code>\t<N-fold>\t<iteration>\t<MAP>\t<Recall>\t<|LIKE|>\t<|HIT|>\t<|Friend|>
                 pageRankStopwatch.Stop();
                 lock(Program.outFileLocker)
@@ -113,10 +115,10 @@ namespace TweetRecommender
                         switch (metric)
                         {
                             case EvaluationMetric.MAP:
-                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / nFold));
+                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / 1));
                                 break;
                             case EvaluationMetric.RECALL:
-                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / nFold));
+                                Program.logger.Write("\t{0:F15}", (finalResult[metric] / 1));
                                 break;
                             case EvaluationMetric.LIKE:
                                 Program.logger.Write("\t" + (finalResult[metric]));
@@ -131,6 +133,9 @@ namespace TweetRecommender
                     // Output Execution Time
                     Program.logger.WriteLine("\t" + Tools.getExecutionTime(pageRankStopwatch));
                     Program.logger.Flush();
+                    // Console Output
+                    Console.WriteLine("|Friend|: " + this.numOfFriend);
+                    Console.WriteLine("Excution Time: " + Tools.getExecutionTime(pageRankStopwatch));
                 }
             }
             catch (Exception e)
@@ -156,6 +161,8 @@ namespace TweetRecommender
 
                 // #1 Core Part: 'EgoNetwork DB' --> 'Graph Strctures(Node, Edge)'
                 loader.setTrainTestSet(fold);
+                if (Program.isValidTrainSet == false)
+                    return;
                 List<Feature> features = loader.getFeaturesOnMethodology(methodology);
                 loader.setGraphConfiguration(features);
 
@@ -189,7 +196,7 @@ namespace TweetRecommender
 
                 // #3 Core Part: Recommendation list(Personalized PageRanking Algorithm)
                 Recommender recommender = new Recommender(graph);
-                var recommendation = recommender.Recommendation(0, 0.30f, nIteration); // '0': Ego Node's Index, '0.15f': Damping Factor
+                var recommendation = recommender.Recommendation(0, 0.15f, nIteration); // '0': Ego Node's Index, '0.15f': Damping Factor
 
                 // #4 Core Part: Validation - AP(Average Precision)
                 DataSet testSet = loader.getTestSet();

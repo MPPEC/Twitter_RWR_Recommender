@@ -29,6 +29,7 @@ namespace TwitterRWR.Data
 
         /**************************** Accessor Methods ****************************/
         public HashSet<long> getEgoLikedTweets() { return egoLikedTweets; }
+        public int getCntEgoLikedTweets() { return egoLikedTweets.Count; }
         public HashSet<long> getEgoLikedTweetsInTimeline() { return egoLikedTweetsInTimeline; }
         public HashSet<long> getEgoUnLikedTweetsInTimeline() { return egoUnLikedTweetsInTimeline; }
         public SortedSet<long> getTimeline() { return timeline; }
