@@ -36,12 +36,12 @@ namespace TweetRecommender
         public static StreamWriter logger;
 
         // Environment Setting
-        public static int egoLikeThresholdInTestSet;
+        public static double egoLikeThresholdRatioInTestSet;
         public static bool isValidTrainSet; // |Likes in TrainSet| >= constraintCntLikeOfEgoInTestSet
         public static bool isOnlyFriendInEgoNetwork;
         public static bool isGenericFriendship;
 
-        // Command line argument: C:\Users\M-PEC\Desktop\TwitterDB 0 10 15 50 1 1
+        // Command line argument: C:\Users\dilet\Desktop\TwitterDB 0 10 15 0.1 1 1
         public static void Main(string[] args) 
         {
             Console.WriteLine("RWR-based Recommendation (" + DateTime.Now.ToString() + ")\n");
@@ -52,7 +52,7 @@ namespace TweetRecommender
             string[] methodologyList = args[1].Split(',');              // The list of experimental codes (csv format; for example: 0,1,8,9,10,11,12 )
             int kFolds = int.Parse(args[2]);                            // Number of folds
             int nIterations = int.Parse(args[3]);                       // Number of iterations for RWR
-            egoLikeThresholdInTestSet = int.Parse(args[4]);
+            egoLikeThresholdRatioInTestSet = double.Parse(args[4]);
             isOnlyFriendInEgoNetwork = (int.Parse(args[5]) == 1) ? true : false;
             isGenericFriendship = (int.Parse(args[6]) == 1) ? true : false;
 
