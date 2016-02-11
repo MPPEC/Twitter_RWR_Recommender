@@ -167,8 +167,8 @@ namespace TweetRecommender {
                 }
             }
             // Only Recommend on Ego: |Likes of Ego in TrainSet| >= threshold
-            int egoLikeThresholdInTestSet = (int)Program.egoLikeThresholdRatioInTestSet * (trainSet.getCntEgoLikedTweets() + testSet.getCntEgoLikedTweets());
-            if (testSet.getCntEgoLikedTweets() < egoLikeThresholdInTestSet)
+            double egoLikeThresholdInTestSet = Program.egoLikeThresholdRatioInTestSet * (trainSet.getCntEgoLikedTweets() + testSet.getCntEgoLikedTweets());
+            if (testSet.getCntEgoLikedTweets() < Math.Floor(egoLikeThresholdInTestSet))
                 Program.isValidTrainSet = false;
             else
                 Program.isValidTrainSet = true;
