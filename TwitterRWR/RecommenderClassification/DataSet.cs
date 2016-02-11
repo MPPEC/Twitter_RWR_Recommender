@@ -9,7 +9,7 @@ namespace RecommenderClassification
     class DataSet
     {
         /***************************** Properties *********************************/
-        HashSet<EgoNetwork> egoNetworkList;
+        public HashSet<EgoNetwork> egoNetworkList { get; }
 
         /***************************** Constructor *********************************/
         public DataSet()

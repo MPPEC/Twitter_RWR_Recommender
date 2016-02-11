@@ -11,25 +11,28 @@ namespace RecommenderClassification
         static void Main(string[] args)
         {
             // Attirbute Column List
-            string[] column = { "likeMention", "likeFriendPublish", "averageSimilarity", "friendRatio", "averageCofollow" };
+            string[] columnNames = { "likeMention", "likeFriendPublish", "averageSimilarity", "friendRatio", "averageCofollow" };
 
             // Commandline arguments
             string rwrResultFilePath = args[0];
             string egoNetworkAnalysisFilePath = args[1];
             int nFold = int.Parse(args[2]);
+            int classLabelCount = int.Parse(args[3]);
 
             // Initialize Classification Model
-            DataPreprocess classification = new DataPreprocess(nFold);
-            classification.dataSetConfiguration(rwrResultFilePath, egoNetworkAnalysisFilePath);
+            DataPreprocess dataPreprocess = new DataPreprocess(nFold);
+            dataPreprocess.dataSetConfiguration(rwrResultFilePath, egoNetworkAnalysisFilePath);
 
             // K-Fold Cross Validation
             for (int k = 0; k < 1; k++)
             {
-                var dataSets = classification.getTrainTestSet(k);
+                var dataSets = dataPreprocess.getTrainTestSet(k);
                 DataSet trainSet, testSet;
                 trainSet = (DataSet)dataSets.Item1;
                 testSet = (DataSet)dataSets.Item2;
 
+                Classification classification = new Classification(columnNames, classLabelCount);
+                classification.learnDecisionTreeModel(trainSet);
             }
         }
     }
