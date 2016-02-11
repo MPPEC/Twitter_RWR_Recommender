@@ -11,7 +11,7 @@ namespace RecommenderClassification
         static void Main(string[] args)
         {
             // Attirbute Column List
-            string[] columnNames = { "likeMention", "likeFriendPublish", "averageSimilarity", "friendRatio", "averageCofollow" };
+            string[] intPutColumns = { "likeMention", "likeFriendPublish", "averageSimilarity", "friendRatio", "averageCofollow" };
 
             // Commandline arguments
             string rwrResultFilePath = args[0];
@@ -31,9 +31,12 @@ namespace RecommenderClassification
                 trainSet = (DataSet)dataSets.Item1;
                 testSet = (DataSet)dataSets.Item2;
 
-                Classification classification = new Classification(columnNames, classLabelCount);
+                Classification classification = new Classification(intPutColumns, classLabelCount);
                 classification.learnDecisionTreeModel(trainSet);
+                classification.prediction(testSet);
             }
+
+            // Validation
         }
     }
 }
