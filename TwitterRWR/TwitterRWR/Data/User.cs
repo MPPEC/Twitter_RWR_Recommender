@@ -39,7 +39,7 @@ namespace TwitterRWR.Data
         public HashSet<long> getRetweets() { return this.retweets; }
         public HashSet<long> getQuotes() { return this.quotes; }
         public HashSet<long> getFavorites() { return this.favorites; }
-        public HashSet<long> getLikedTweets() { return new HashSet<long>(likedTweets); }
+        public HashSet<long> getLikedTweets() { return new HashSet<long>(this.likedTweets); }
 
         /**************************** Setter Methods ****************************/
         public void setFolloweeList(HashSet<long> newFolloweeList) { this.followeeList = newFolloweeList; }

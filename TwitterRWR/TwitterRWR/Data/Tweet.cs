@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TwitterRWR.Data
 {
-    class Tweet
+    public class Tweet
     {
         /***************************** Properties *********************************/
         public long ID;
