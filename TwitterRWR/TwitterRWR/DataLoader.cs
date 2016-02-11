@@ -145,7 +145,7 @@ namespace TweetRecommender {
         {
             this.trainSet = new DataSet();
             this.testSet = dataSets[index]; // TestSet Setting
-            this.testSet.clear();
+            this.testSet.clearEgoLikedTweets();
 
             for (int i = 0; i < this.dataSets.Length; i++)
             {

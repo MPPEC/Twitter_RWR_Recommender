@@ -17,7 +17,7 @@ namespace EgoNetworkAnalysis
             Console.WriteLine("Ego-Network Analysis Start (" + DateTime.Now.ToString() + ")\n");
             Stopwatch programStopwatch = Stopwatch.StartNew();
 
-            // Program arguments
+            // Commandline arguments
             string dirPath = args[0] + Path.DirectorySeparatorChar;
 
             // DB(.sqlite) List

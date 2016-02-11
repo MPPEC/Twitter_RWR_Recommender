@@ -79,7 +79,7 @@ namespace TwitterRWR.Data
             foreach (long tweet in this.timeline)
                 Console.WriteLine(tweet);
         }
-        public void clear()
+        public void clearEgoLikedTweets()
         {
             this.egoLikedTweets.Clear();
         }
