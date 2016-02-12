@@ -16,15 +16,17 @@ namespace RecommenderClassification
             // Commandline arguments
             string rwrResultFilePath = args[0];
             string egoNetworkAnalysisFilePath = args[1];
-            int nFold = int.Parse(args[2]);
-            int classLabelCount = int.Parse(args[3]);
+            string classificationResultFilePath = args[2];
+            int nFold = int.Parse(args[3]);
+            int classLabelCount = int.Parse(args[4]);
 
             // Initialize Classification Model
             DataPreprocess dataPreprocess = new DataPreprocess(nFold);
             dataPreprocess.dataSetConfiguration(rwrResultFilePath, egoNetworkAnalysisFilePath);
 
             // K-Fold Cross Validation
-            for (int k = 0; k < 1; k++)
+            double sumOfCorrectPredictRatio = 0.0;
+            for (int k = 0; k < nFold; k++)
             {
                 var dataSets = dataPreprocess.getTrainTestSet(k);
                 DataSet trainSet, testSet;
@@ -34,9 +36,18 @@ namespace RecommenderClassification
                 Classification classification = new Classification(intPutColumns, classLabelCount);
                 classification.learnDecisionTreeModel(trainSet);
                 classification.prediction(testSet);
-            }
 
-            // Validation
+                double correctPredictRatio = 0.0;
+                correctPredictRatio = testSet.validation();
+                sumOfCorrectPredictRatio += correctPredictRatio;
+
+                // Log Classification Result
+                testSet.logClassificationResult(classificationResultFilePath);
+            }
+            double averageCorrectPredictRatio = sumOfCorrectPredictRatio / nFold;
+
+            Console.WriteLine("Error Predict Raio: " + (1 - averageCorrectPredictRatio));
+            
         }
     }
 }

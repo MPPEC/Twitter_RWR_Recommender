@@ -12,38 +12,23 @@ namespace RecommenderClassification
     class Classification
     {
         /***************************** Properties **********************************/
-        private DataTable trainDataTable;
-        private DataColumn[] dataColumns;
-        private DecisionVariable[] attributeList;
+        private double[][] trainInputArray;
+        private int[] trainOutputVector;
+        private DecisionVariable[] decisionTreeAttributes;
         private DecisionTree tree;
-        private string[] inputColumns;
-        private int[] outputVector;
-
 
         /***************************** Constructor *********************************/
-        public Classification(string[] newInputColumns, int classLabeCount)
+        public Classification(string[] columns, int classLabeCount)
         {
-            this.inputColumns = newInputColumns;
-
-            // Initialize Schema of trainDataTable
-            this.trainDataTable = new DataTable("Train Table");
-            for (int i = 0; i < inputColumns.Length; i++)
-            {
-                DataColumn inputColumn = new DataColumn();
-                inputColumn.DataType = System.Type.GetType("System.Double");
-                inputColumn.ColumnName = inputColumns[i];
-                trainDataTable.Columns.Add(inputColumn);
-            }
-            
             // Initialize DecisionTree
-            DecisionVariable[] attributeList = new DecisionVariable[inputColumns.Length];
-            for (int i = 0; i < inputColumns.Length; i++)
+            decisionTreeAttributes = new DecisionVariable[columns.Length];
+            for (int i = 0; i < decisionTreeAttributes.Length; i++)
             {
-                attributeList[i] = new DecisionVariable(inputColumns[i], DecisionVariableKind.Continuous);
+                decisionTreeAttributes[i] = new DecisionVariable(columns[i], DecisionVariableKind.Continuous);
             }
 
             int classCount = classLabeCount;
-            tree = new DecisionTree(attributeList, classCount);
+            tree = new DecisionTree(decisionTreeAttributes, classCount);
         }
 
         /*************************** Primary Methods *******************************/
@@ -52,43 +37,33 @@ namespace RecommenderClassification
             this.setTrainDataTable(trainSet);
             C45Learning c45 = new C45Learning(this.tree);
 
-            double[][] inputs = new double[trainDataTable.Rows.Count][];
-            int i = 0;
-            foreach (DataRow row in trainDataTable.Rows)
-            {               
-                inputs[i] = new double[trainDataTable.Columns.Count];
-                int j = 0;
-                foreach(DataColumn column in trainDataTable.Columns)
-                {
-                    inputs[i][j] = (double)row[column];
-                    j++;
-                }
-                i++;
-            }
-
-            double error = c45.Run(inputs, outputVector);
+            double error = c45.Run(this.trainInputArray, this.trainOutputVector);
             Console.WriteLine("error: " + error);
         }
 
         public void prediction(DataSet testSet)
         {
-
+            int newPredictLabel;
+            foreach(EgoNetwork egoNetwork in testSet.egoNetworkList)
+            {
+                newPredictLabel = this.tree.Compute(egoNetwork.attributes);
+                egoNetwork.predictLabel = newPredictLabel;
+            }
         }
 
         /*************************** Secondary Methods *******************************/
         public void setTrainDataTable(DataSet trainSet)
         {
-            outputVector = new int[trainSet.egoNetworkList.Count];
-            int i = 0;
-            foreach (EgoNetwork egoNetwork in trainSet.egoNetworkList)
+            int egoCount = trainSet.egoNetworkList.Count;
+            EgoNetwork[] egoList = new EgoNetwork[egoCount];
+            trainSet.egoNetworkList.CopyTo(egoList);
+            this.trainInputArray = new double[egoCount][];
+            this.trainOutputVector = new int[egoCount];
+            
+            for (int i = 0; i < this.trainInputArray.Length; i++)
             {
-                DataRow row = trainDataTable.NewRow();
-                for (int j = 0; j < inputColumns.Length; j++)
-                {
-                    row[inputColumns[j]] = egoNetwork.attributes[j];
-                }
-                trainDataTable.Rows.Add(row);
-                outputVector[i++] = egoNetwork.optimalLabel;
+                this.trainInputArray[i] = egoList[i].attributes;
+                this.trainOutputVector[i] = egoList[i].optimalLabel;
             }
         }
     }

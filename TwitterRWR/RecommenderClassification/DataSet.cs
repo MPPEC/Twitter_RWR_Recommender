@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,7 +30,34 @@ namespace RecommenderClassification
             this.egoNetworkList.UnionWith(otherDataSet.egoNetworkList);
         }
 
+        public double validation()
+        {
+            double egoCount = (double)this.egoNetworkList.Count;
+            double correctCount = 0.0;
+
+            foreach(EgoNetwork egoNetwork in this.egoNetworkList)
+            {
+                if (egoNetwork.optimalLabel == egoNetwork.predictLabel)
+                    correctCount += 1.0;
+            }
+
+            return correctCount / egoCount;
+        }
+
         /*************************** Other Methods *******************************/
+        public void logClassificationResult(string classificationFilePath)
+        {
+            using (StreamWriter logger = new StreamWriter(classificationFilePath, true))
+            {
+                foreach(EgoNetwork egoNetwork in this.egoNetworkList)
+                {
+                    logger.WriteLine("{0}\t{1}\t{2:F15}\t{3}\t{4:F15}", egoNetwork.egoID,
+                        egoNetwork.optimalLabel, egoNetwork.rwrResults[egoNetwork.optimalLabel],
+                        egoNetwork.predictLabel, egoNetwork.rwrResults[egoNetwork.predictLabel]);
+                }          
+            }
+        }
+
         public void display()
         {
             foreach (EgoNetwork egoNetwork in egoNetworkList)

@@ -67,6 +67,7 @@
     <Compile Include="EgoNetwork.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="Temporary\Classification.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
