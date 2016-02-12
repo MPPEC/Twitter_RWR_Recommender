@@ -56,8 +56,14 @@ namespace TweetRecommender
             isOnlyFriendInEgoNetwork = (int.Parse(args[5]) == 1) ? true : false;
             isGenericFriendship = (int.Parse(args[6]) == 1) ? true : false;
 
-            // DB(.sqlite) List
+            // <Ego, dbPath(.sqlite)> Sorted by Ego ID(Ascending Order)
             string[] dbCollection = Directory.GetFiles(dirPath, "*.sqlite");
+            SortedDictionary<long, string> egoList = new SortedDictionary<long, string>();
+            foreach (string dbPath in dbCollection)
+            {
+                long egoID = long.Parse(Path.GetFileNameWithoutExtension(dbPath));
+                egoList.Add(egoID, dbPath);
+            }          
 
             // Methodology list(Experiment Codes)
             List<Methodology> methodologies = new List<Methodology>();
@@ -93,9 +99,10 @@ namespace TweetRecommender
                 Experiment experiment;
                 personalizedPageRankThreadParamters pagaRankParameters;
                 List<Thread> threadList = new List<Thread>();
-                foreach (string dbFile in dbCollection)
+                foreach (KeyValuePair<long, string> egoDBpair in egoList)
                 {
-                    long egoID = long.Parse(Path.GetFileNameWithoutExtension(dbFile));
+                    long egoID = egoDBpair.Key;
+                    string dbPath = egoDBpair.Value;
                     if (alreadyPerformedEgoList.Contains(egoID) == true)
                     {
                         Console.WriteLine("Ego {0} Already Performend", egoID);
@@ -106,7 +113,7 @@ namespace TweetRecommender
                         // one Thread to one DB
                         Program.dbSemaphore.WaitOne();
                         Console.WriteLine("Ego {0} Start", egoID);
-                        experiment = new Experiment(dbFile);
+                        experiment = new Experiment(dbPath);
                         Thread thread = new Thread(experiment.startPersonalizedPageRank);
                         pagaRankParameters = new personalizedPageRankThreadParamters(kFolds, nIterations, methodology);
                         thread.Start(pagaRankParameters);

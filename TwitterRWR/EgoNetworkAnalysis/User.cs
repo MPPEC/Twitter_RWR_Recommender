@@ -7,7 +7,7 @@ namespace EgoNetworkAnalysis
     public class User
     {
         /***************************** Properties *********************************/
-        public long ID;
+        public long ID { get; }
         private HashSet<long> followeeList;
         private HashSet<Tweet> publishedTweets;
         private HashSet<Tweet> retweets;
@@ -47,6 +47,10 @@ namespace EgoNetworkAnalysis
         public bool isLike(Tweet tweet)
         {
             return likedTweets.Contains(tweet);
+        }
+        public bool isFollow(User otherUser)
+        {
+            return this.followeeList.Contains(otherUser.ID);
         }
         public bool isFriend(User otherUser)
         {
