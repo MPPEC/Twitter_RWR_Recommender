@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecommenderClassification",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EgoNetworkAnalysis", "EgoNetworkAnalysis\EgoNetworkAnalysis.csproj", "{60790BCB-C6A3-4559-A65C-5860CF954FF8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "rwrResultRefine", "rwrResultRefine\rwrResultRefine.csproj", "{A764A53A-1F1F-4FCE-BBA7-B45E6C381F1A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{60790BCB-C6A3-4559-A65C-5860CF954FF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{60790BCB-C6A3-4559-A65C-5860CF954FF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{60790BCB-C6A3-4559-A65C-5860CF954FF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A764A53A-1F1F-4FCE-BBA7-B45E6C381F1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A764A53A-1F1F-4FCE-BBA7-B45E6C381F1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A764A53A-1F1F-4FCE-BBA7-B45E6C381F1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A764A53A-1F1F-4FCE-BBA7-B45E6C381F1A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
