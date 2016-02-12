@@ -14,31 +14,34 @@ namespace RecommenderClassification
         /***************************** Properties **********************************/
         private double[][] trainInputArray;
         private int[] trainOutputVector;
-        private DecisionVariable[] decisionTreeAttributes;
-        private DecisionTree tree;
+        private DecisionVariable[] decisionAttributes;
+        private DecisionTree descisionTree;
 
         /***************************** Constructor *********************************/
         public Classification(string[] columns, int classLabeCount)
         {
             // Initialize DecisionTree
-            decisionTreeAttributes = new DecisionVariable[columns.Length];
-            for (int i = 0; i < decisionTreeAttributes.Length; i++)
+            decisionAttributes = new DecisionVariable[columns.Length];
+            for (int i = 0; i < decisionAttributes.Length; i++)
             {
-                decisionTreeAttributes[i] = new DecisionVariable(columns[i], DecisionVariableKind.Continuous);
+                decisionAttributes[i] = new DecisionVariable(columns[i], DecisionVariableKind.Continuous);
             }
 
             int classCount = classLabeCount;
-            tree = new DecisionTree(decisionTreeAttributes, classCount);
+            descisionTree = new DecisionTree(decisionAttributes, classCount);
         }
 
         /*************************** Primary Methods *******************************/
-        public void learnDecisionTreeModel(DataSet trainSet)
-        {
-            this.setTrainDataTable(trainSet);
-            C45Learning c45 = new C45Learning(this.tree);
+        public double learnDecisionTreeModel(DataSet trainSet)
+        {           
+            // Convert TrainSet --> TrainDataTable
+            this.convertToTrainIntputTable(trainSet);
+            // C4.5 Decision Tree Algorithm
+            double learningError;
+            C45Learning c45 = new C45Learning(this.descisionTree);
+            learningError = c45.Run(this.trainInputArray, this.trainOutputVector);
 
-            double error = c45.Run(this.trainInputArray, this.trainOutputVector);
-            Console.WriteLine("error: " + error);
+            return learningError;
         }
 
         public void prediction(DataSet testSet)
@@ -46,13 +49,13 @@ namespace RecommenderClassification
             int newPredictLabel;
             foreach(EgoNetwork egoNetwork in testSet.egoNetworkList)
             {
-                newPredictLabel = this.tree.Compute(egoNetwork.attributes);
+                newPredictLabel = this.descisionTree.Compute(egoNetwork.attributes);
                 egoNetwork.predictLabel = newPredictLabel;
             }
         }
 
         /*************************** Secondary Methods *******************************/
-        public void setTrainDataTable(DataSet trainSet)
+        public void convertToTrainIntputTable(DataSet trainSet)
         {
             int egoCount = trainSet.egoNetworkList.Count;
             EgoNetwork[] egoList = new EgoNetwork[egoCount];
