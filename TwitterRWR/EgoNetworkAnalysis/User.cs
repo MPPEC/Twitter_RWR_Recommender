@@ -21,9 +21,17 @@ namespace EgoNetworkAnalysis
             this.ID = newID;
             this.likedTweets = new HashSet<Tweet>();
         }
-
-        /***************************** Core Methods *********************************/
-        /***************************** Core Methods *********************************/
+        public User(User newUser)
+        {
+            this.ID = newUser.ID;
+            this.followeeList = new HashSet<long>(followeeList);
+            this.publishedTweets = deepCloneHashSetTweet(newUser.publishedTweets);
+            this.retweets = deepCloneHashSetTweet(newUser.retweets);
+            this.quotes = deepCloneHashSetTweet(newUser.quotes);
+            this.favorites = deepCloneHashSetTweet(newUser.favorites);
+            this.updateLikedTweets();
+        }
+        /***************************** Core Methods *********************************/        
         // Similarity Measure: 'Ego user' to 'Followee'
         public double jaccardSimilarity(User otherUser)
         {
@@ -31,12 +39,12 @@ namespace EgoNetworkAnalysis
             HashSet<Tweet> A = new HashSet<Tweet>(this.likedTweets); // Shallow Copy
             HashSet<Tweet> B = new HashSet<Tweet>(otherUser.getLikedTweets()); // Shallow Copy
             double cardinalityA, cardinalityB, intersection = 0;
-            cardinalityA = A.Count;
-            cardinalityB = B.Count;
+            cardinalityA = (double)A.Count;
+            cardinalityB = (double)B.Count;
 
             // Intersection
             A.IntersectWith(B);
-            intersection = A.Count;
+            intersection = (double)A.Count;
             // Jaccard Similarity
             double similarScore =
                 (intersection / (cardinalityA + cardinalityB - intersection));
@@ -60,11 +68,11 @@ namespace EgoNetworkAnalysis
         /**************************** Accessor Methods ****************************/
         public long getID() { return this.ID; }
         public HashSet<long> getFolloweeList() { return new HashSet<long>(this.followeeList); }
-        public HashSet<Tweet> getPublishedTweets() { return this.publishedTweets; }
-        public HashSet<Tweet> getRetweets() { return this.retweets; }
-        public HashSet<Tweet> getQuotes() { return this.quotes; }
-        public HashSet<Tweet> getFavorites() { return this.favorites; }
-        public HashSet<Tweet> getLikedTweets() { return new HashSet<Tweet>(this.likedTweets); }
+        public HashSet<Tweet> getPublishedTweets() { return deepCloneHashSetTweet(this.publishedTweets); }
+        public HashSet<Tweet> getRetweets() { return deepCloneHashSetTweet(this.retweets); }
+        public HashSet<Tweet> getQuotes() { return deepCloneHashSetTweet(this.quotes); }
+        public HashSet<Tweet> getFavorites() { return deepCloneHashSetTweet(this.favorites); }
+        public HashSet<Tweet> getLikedTweets() { return deepCloneHashSetTweet(this.likedTweets); }
 
         /**************************** Setter Methods ****************************/
         public void setFolloweeList(HashSet<long> newFolloweeList) { this.followeeList = newFolloweeList; }
@@ -72,7 +80,7 @@ namespace EgoNetworkAnalysis
         public void setPublishedTweets(HashSet<Tweet> newPublishedTweets) { this.publishedTweets = newPublishedTweets; }
         public void setRetweets(HashSet<Tweet> newRetweets) { this.retweets = newRetweets; }
         public void setQuotes(HashSet<Tweet> newQuotes) { this.quotes = newQuotes; }
-        public void setFavorites(HashSet<Tweet> newFavorites) { this.favorites = newFavorites; }
+        public void setFavorites(HashSet<Tweet> newFavorites) { this.favorites = newFavorites; }       
         // Liked Tweets = retweet U quote U favorite
         public void updateLikedTweets()
         {
@@ -88,6 +96,19 @@ namespace EgoNetworkAnalysis
         {
             if (this.likedTweets.Contains(tweet))
                 this.likedTweets.Remove(tweet);
+        }
+
+        /***************************** Other Methods *********************************/
+        // Deep Copy: tweetSet0 --> tweetSet1
+        public HashSet<Tweet> deepCloneHashSetTweet(HashSet<Tweet> tweetSet0)
+        {
+            HashSet<Tweet> tweetSet1 = new HashSet<Tweet>();
+            foreach(Tweet tweet in tweetSet0)
+            {
+                tweetSet1.Add(new Tweet(tweet));
+            }
+
+            return tweetSet1;
         }
     }
 }

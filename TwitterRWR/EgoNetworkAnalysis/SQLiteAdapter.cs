@@ -9,7 +9,7 @@ namespace EgoNetworkAnalysis
         /***************************** Properties *********************************/
         private SQLiteConnection conn = null;
 
-        /***************************** Constructor *********************************/
+        /***************************** Constructor ********************************/
         public SQLiteAdapter(string dbPath)
         {
             try
@@ -26,17 +26,15 @@ namespace EgoNetworkAnalysis
                 throw e;
             }
         }
-
         public void closeDB()
         {
             if (conn != null)
                 conn.Close();
         }
 
-        /*******************************************************************************/
         /***************************** Primary Methods *********************************/
-        /*******************************************************************************/
-        // Followee list of 'userID'
+
+        // 'Followee' list of 'userID'
         public HashSet<long> getFolloweeList(User user)
         {
             HashSet<long> followeeList = new HashSet<long>();
@@ -47,15 +45,15 @@ namespace EgoNetworkAnalysis
                 {
                     while (reader.Read())
                     {
-                        long followee = (long)reader.GetValue(0);
-                        followeeList.Add(followee);
+                        long followeeID = reader.GetInt64(0);
+                        followeeList.Add(followeeID);
                     }
                 }
             }
             return followeeList;
         }
 
-        // Tweets published by 'user'
+        // Tweet list 'published' by 'user'
         public HashSet<Tweet> getPublishedTweets(User user)
         {
             HashSet<Tweet> publishedTweetList = new HashSet<Tweet>();
@@ -66,10 +64,10 @@ namespace EgoNetworkAnalysis
                 {
                     while (reader.Read())
                     {
-                        long tweetID = (long)reader.GetValue(0);
-                        long author = (long)reader.GetValue(1);
+                        long tweetID = reader.GetInt64(0);
+                        long author = reader.GetInt64(1);
                         bool isMention = false;
-                        if (reader.GetInt32(2) == 1)
+                        if (reader.GetBoolean(2) == true)
                             isMention = true;
                         publishedTweetList.Add(new Tweet(tweetID, author, isMention));
                     }
@@ -78,7 +76,7 @@ namespace EgoNetworkAnalysis
             return publishedTweetList;
         }
 
-        // Tweets retweeted by 'userId'
+        // Tweet list 'retweeted' by 'user'
         public HashSet<Tweet> getRetweetList(User user)
         {
             HashSet<Tweet> retweetList = new HashSet<Tweet>();
@@ -89,10 +87,10 @@ namespace EgoNetworkAnalysis
                 {
                     while (reader.Read())
                     {
-                        long tweetID = (long)reader.GetValue(0);
-                        long author = (long)reader.GetValue(1);
+                        long tweetID = reader.GetInt64(0);
+                        long author = reader.GetInt64(1);
                         bool isMention = false;
-                        if (reader.GetInt32(2) == 1)
+                        if (reader.GetBoolean(2) == true)
                             isMention = true;
                         retweetList.Add(new Tweet(tweetID, author, isMention));
                     }
@@ -101,7 +99,7 @@ namespace EgoNetworkAnalysis
             return retweetList;
         }
 
-        // Tweets quoted by 'userId'
+        // Tweet list 'quoted' by 'userId'
         public HashSet<Tweet> getQuoteList(User user)
         {
             HashSet<Tweet> quoteList = new HashSet<Tweet>();
@@ -112,10 +110,10 @@ namespace EgoNetworkAnalysis
                 {
                     while (reader.Read())
                     {
-                        long tweetID = (long)reader.GetValue(0);
-                        long author = (long)reader.GetValue(1);
+                        long tweetID = reader.GetInt64(0);
+                        long author = reader.GetInt64(1);
                         bool isMention = false;
-                        if (reader.GetInt32(2) == 1)
+                        if (reader.GetBoolean(2) == true)
                             isMention = true;
                         quoteList.Add(new Tweet(tweetID, author, isMention));
                     }
@@ -124,7 +122,7 @@ namespace EgoNetworkAnalysis
             return quoteList;
         }
 
-        // Tweets favorited by 'userId'
+        // Tweet list 'favorited' by 'user'
         public HashSet<Tweet> getFavoriteList(User user)
         {
             HashSet<Tweet> favoriteList = new HashSet<Tweet>();
@@ -135,10 +133,10 @@ namespace EgoNetworkAnalysis
                 {
                     while (reader.Read())
                     {
-                        long tweetID = (long)reader.GetValue(0);
-                        long author = (long)reader.GetValue(1);
+                        long tweetID = reader.GetInt64(0);
+                        long author = reader.GetInt64(1);
                         bool isMention = false;
-                        if (reader.GetInt32(2) == 1)
+                        if (reader.GetBoolean(2) == true)
                             isMention = true;
                         favoriteList.Add(new Tweet(tweetID, author, isMention));
                     }
@@ -154,11 +152,9 @@ namespace EgoNetworkAnalysis
             using (SQLiteCommand cmd = new SQLiteCommand(conn))
             {
                 cmd.CommandText = "SELECT COUNT(*) FROM mention WHERE source = " + user1.ID + " AND target = " + user2.ID;
-                Int64 count = (Int64)cmd.ExecuteScalar();
-                mentionCount += (int)count;
+                mentionCount += (Int32)cmd.ExecuteScalar();
                 cmd.CommandText = "SELECT COUNT(*) FROM mention WHERE source = " + user2.ID + " AND target = " + user1.ID;
-                count = (Int64)cmd.ExecuteScalar();
-                mentionCount += (int)count;
+                mentionCount += (Int32)cmd.ExecuteScalar();
             }
             return mentionCount;
         }

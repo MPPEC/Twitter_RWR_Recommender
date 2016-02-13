@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EgoNetworkAnalysis", "EgoNe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "rwrResultRefine", "rwrResultRefine\rwrResultRefine.csproj", "{A764A53A-1F1F-4FCE-BBA7-B45E6C381F1A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Experiment", "Experiment\Experiment.csproj", "{8E8514E7-7E7B-4AF2-976F-F8A7D2A21B8B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{A764A53A-1F1F-4FCE-BBA7-B45E6C381F1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A764A53A-1F1F-4FCE-BBA7-B45E6C381F1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A764A53A-1F1F-4FCE-BBA7-B45E6C381F1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E8514E7-7E7B-4AF2-976F-F8A7D2A21B8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E8514E7-7E7B-4AF2-976F-F8A7D2A21B8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E8514E7-7E7B-4AF2-976F-F8A7D2A21B8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E8514E7-7E7B-4AF2-976F-F8A7D2A21B8B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

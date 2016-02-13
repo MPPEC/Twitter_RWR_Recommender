@@ -46,9 +46,9 @@ namespace EgoNetworkAnalysis
                 // Construct Ego-Network Information              
                 egoNetwork.setNetworkInformation(dbAdapter);
                 // Anaylize Ego-Network
-                egoNetwork.startNetworkAnalysis();
+                //egoNetwork.startNetworkAnalysis();
                 // Output Analysis Result
-                egoNetwork.outputNetworkAnalysisResult(outFilePath);
+                //egoNetwork.outputNetworkAnalysisResult(outFilePath);
 
                 dbAdapter.closeDB(); 
             }
