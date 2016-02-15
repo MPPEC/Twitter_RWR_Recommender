@@ -2,6 +2,7 @@
 using Accord.MachineLearning.DecisionTrees.Learning;
 using System;
 using System.Data;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,13 +19,13 @@ namespace RecommenderClassification
         private DecisionTree descisionTree;
 
         /***************************** Constructor *********************************/
-        public Classification(string[] columns, int classLabeCount)
+        public Classification(SortedList columnList, int classLabeCount)
         {
             // Initialize DecisionTree
-            decisionAttributes = new DecisionVariable[columns.Length];
+            decisionAttributes = new DecisionVariable[columnList.Count];
             for (int i = 0; i < decisionAttributes.Length; i++)
             {
-                decisionAttributes[i] = new DecisionVariable(columns[i], DecisionVariableKind.Continuous);
+                decisionAttributes[i] = new DecisionVariable((string)columnList.GetByIndex(i), DecisionVariableKind.Continuous);
             }
 
             int classCount = classLabeCount;
@@ -62,7 +63,7 @@ namespace RecommenderClassification
             trainSet.egoNetworkList.CopyTo(egoList);
             this.trainInputArray = new double[egoCount][];
             this.trainOutputVector = new int[egoCount];
-            
+
             for (int i = 0; i < this.trainInputArray.Length; i++)
             {
                 this.trainInputArray[i] = egoList[i].attributes;

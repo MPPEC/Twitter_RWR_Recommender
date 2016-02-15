@@ -146,15 +146,15 @@ namespace EgoNetworkAnalysis
         }
 
         // Total mention count between 'user1' & 'user2'
-        public int getMentionCount(User user1, User user2)
+        public long getMentionCount(User user1, User user2)
         {
-            int mentionCount = 0;
+            Int64 mentionCount = 0; // 'Int64' == 'long'
             using (SQLiteCommand cmd = new SQLiteCommand(conn))
             {
                 cmd.CommandText = "SELECT COUNT(*) FROM mention WHERE source = " + user1.ID + " AND target = " + user2.ID;
-                mentionCount += (Int32)cmd.ExecuteScalar();
+                mentionCount += (Int64)cmd.ExecuteScalar();
                 cmd.CommandText = "SELECT COUNT(*) FROM mention WHERE source = " + user2.ID + " AND target = " + user1.ID;
-                mentionCount += (Int32)cmd.ExecuteScalar();
+                mentionCount += (Int64)cmd.ExecuteScalar();
             }
             return mentionCount;
         }

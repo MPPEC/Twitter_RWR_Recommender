@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,52 +10,85 @@ namespace RecommenderClassification
 {
     class Program
     {
-        // Commandline Argument: C:\Users\dilet\Desktop\TwitterDB\RWR_EGO_RESULT.txt C:\Users\dilet\Desktop\TwitterDB\EgoNetwork_Analysis.txt C:\Users\dilet\Desktop\TwitterDB\Classification_Result.txt 5 16
+        // Decision Attirbute List
+        public static string[] candidateColumns = { "AVERAGE_SIMILARITY", "FRIEND_RATIO", "AVERAGE_CO_FOLLOWEE", "CO_FOLLOWEE_COUNT",
+                                                    "LIKE_FRIEND_PUBLISH_RATIO", "AVERAGE_MENTION_COUNT", "LIKE_MENTION_RATIO", "PUBLISH_MENTION_RATIO",
+                                                    "CO_LIKE_WITH_FRIEND_RATIO",
+                                                    "FOLLOWEE_COUNT"};
+
+        // Commandline Argument: C:\Users\dilet\Desktop\TwitterDB\ C:\Users\dilet\Desktop\TwitterDB\EgoNetwork_Analysis.txt 1024 5 16
         static void Main(string[] args)
         {
-            // Decision Attirbute List
-            string[] columns = { "likeMention", "likeFriendPublish", "averageSimilarity", "friendRatio", "averageCofollow" };
-
-            // Commandline Arguments
-            string rwrResultFilePath = args[0];
-            string egoNetworkAnalysisFilePath = args[1];
-            string classificationResultFilePath = args[2];
-            int nFold = int.Parse(args[3]);
-            int classLabelCount = int.Parse(args[4]);
-
-            // DataPreprocess: Split K-Fold DataSets
-            DataPreprocess dataPreprocess = new DataPreprocess(nFold);
-            dataPreprocess.dataSetConfiguration(rwrResultFilePath, egoNetworkAnalysisFilePath);
-
-            // K-Fold Cross Validation
-            double correctPredictRatio, sumOfCorrectPredictRatio = 0.0;
-            double learningError, sumOfLearningError = 0.0;
-            for (int k = 0; k < nFold; k++)
+            string dirPath = args[0];
+            string[] rwrFileCollection = Directory.GetFiles(dirPath, "RWR_EGO_RESULT*.txt");
+            foreach (string rwrFilePath in rwrFileCollection)
             {
-                // Train & Test DataSet
-                var dataSets = dataPreprocess.getTrainTestSet(k);
-                DataSet trainSet, testSet;
-                trainSet = (DataSet)dataSets.Item1;
-                testSet = (DataSet)dataSets.Item2;
+                // Experiment Environment Setting
+                string egoNetworkAnalysisFilePath = args[1];
+                int combinationCount = int.Parse(args[2]);
+                int padding = (int)Math.Ceiling(Math.Log(combinationCount, 2.0));
+                int nFold = int.Parse(args[3]);
+                int classLabelCount = int.Parse(args[4]);
+                string classificationFilePath = dirPath + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(rwrFilePath) + "_CLASSIFICATION.txt";
+                Console.WriteLine(classificationFilePath);
+                if (File.Exists(classificationFilePath))
+                    File.Delete(classificationFilePath);
 
-                // Decision Treee Configuration, Learning & Prediction
-                Classification classification = new Classification(columns, classLabelCount);                
-                learningError = classification.learnDecisionTreeModel(trainSet);
-                sumOfLearningError += learningError;
-                classification.prediction(testSet);
+                using (StreamWriter classificationLogger = new StreamWriter(classificationFilePath))
+                {
+                    // Experiment Argument Setting
+                    for (int combination = 0; combination < combinationCount; combination++)
+                    {
+                        string s = Convert.ToString(combination, 2);
+                        int[] combinationBitArray = s.PadLeft(padding, '0') // Add 0's from left
+                                                .Select(c => int.Parse(c.ToString())) // convert each char to int
+                                                .ToArray(); // Convert IEnumerable from select to Array
 
-                // Correct Recommender Prdicted Label Ratio
-                correctPredictRatio = testSet.validation();
-                sumOfCorrectPredictRatio += correctPredictRatio;
+                        SortedList columnList = new SortedList();
+                        for (int i = 0; i < combinationBitArray.Length; i++)
+                        {
+                            if (combinationBitArray[i] == 1)
+                                columnList.Add(i, candidateColumns[i]);
+                        }
 
-                // Output Classification Result into File
-                testSet.logClassificationResult(classificationResultFilePath);
+                        // DataPreprocess: Split K-Fold DataSets
+                        DataPreprocess dataPreprocess = new DataPreprocess(nFold);
+                        dataPreprocess.dataSetConfiguration(columnList, rwrFilePath, egoNetworkAnalysisFilePath);
+
+                        // K-Fold Cross Validation
+                        double correctPredictRatio = 0.0, sumOfCorrectPredictRatio = 0.0;
+                        double learningError = 0.0, sumOfLearningError = 0.0;
+                        double sumOfMAP = 0.0;
+                        for (int k = 0; k < nFold; k++)
+                        {
+                            // Train & Test DataSet
+                            var dataSets = dataPreprocess.getTrainTestSet(k);
+                            DataSet trainSet, testSet;
+                            trainSet = (DataSet)dataSets.Item1;
+                            testSet = (DataSet)dataSets.Item2;
+
+                            // Decision Treee Configuration, Learning & Prediction
+                            Classification classification = new Classification(columnList, classLabelCount);
+                            learningError = classification.learnDecisionTreeModel(trainSet);
+                            sumOfLearningError += learningError;
+                            classification.prediction(testSet);
+
+                            // Correct Recommender Prdicted Label Ratio
+                            correctPredictRatio = testSet.validation();
+                            sumOfCorrectPredictRatio += correctPredictRatio;
+
+                            // Get MAP of TrainSet
+                            sumOfMAP += trainSet.MAP();
+                        }
+                        double averageMAP = sumOfMAP / nFold;
+                        double averageCorrectPredictRatio = sumOfCorrectPredictRatio / nFold;
+                        double averageLearning = sumOfLearningError / nFold;
+
+                        classificationLogger.WriteLine("{0}\t{1:F15}\t{2:F15}\t{3:F15}",
+                            combination, averageMAP, averageCorrectPredictRatio, 1.0 - averageLearning);
+                    }
+                }
             }
-            double averageCorrectPredictRatio = sumOfCorrectPredictRatio / nFold;
-            double averageLearningError = sumOfLearningError / nFold;
-
-            Console.WriteLine("Average Learning Error: " + averageLearningError);
-            Console.WriteLine("Correct Predict Ratio: " + averageCorrectPredictRatio);           
         }
     }
 }

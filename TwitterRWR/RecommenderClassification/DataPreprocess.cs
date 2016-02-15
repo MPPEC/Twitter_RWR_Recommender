@@ -22,7 +22,7 @@ namespace RecommenderClassification
         }
 
         /*************************** Primary Methods *******************************/
-        public void dataSetConfiguration(string rwrFilePath, string networkFilePath)
+        public void dataSetConfiguration(SortedList columnList, string rwrFilePath, string networkFilePath)
         {
             ArrayList egoIDList = new ArrayList();
             SortedDictionary<long, int> egoOptimalLabelDictionary = new SortedDictionary<long, int>();
@@ -49,7 +49,7 @@ namespace RecommenderClassification
                     egoIDList.Add(egoID);
                 }
             }
-
+            
             using (StreamReader networkReader = new StreamReader(networkFilePath))
             {
                 string line = null;
@@ -57,14 +57,19 @@ namespace RecommenderClassification
                 {
                     long egoID;
                     string[] networkResults = line.Split('\t');
-                    double[] attributes = new double[networkResults.Length - 1];
-
+                    double[] attributes = new double[columnList.Count];
+                    
                     egoID = long.Parse(networkResults[0]);
-                    for (int i = 1; i < networkResults.Length; i++)
-                        attributes[i - 1] = double.Parse(networkResults[i]);
-
+                    int i = 0;
+                    for (int j = 1; j < networkResults.Length; j++)
+                    {
+                        if (columnList.ContainsKey(j - 1))
+                        {
+                            attributes[i++] = double.Parse(networkResults[j]);
+                        }
+                    }
                     egoAttributesDictionary.Add(egoID, attributes);
-                }
+                }             
             }
 
             // K-Fold Split DataSets
@@ -76,14 +81,25 @@ namespace RecommenderClassification
                     egoRwrResultsDictionary[egoID], egoAttributesDictionary[egoID]));
             }
 
-            int boundary = (int)egoNetworkList.Count / nFold;
+            int boundary = egoNetworkList.Count / nFold;
             for (int i = 0; i < nFold; i++)
             {
                 this.dataSets[i] = new DataSet();
-                for (int j = i * boundary; j < (i + 1) * boundary; j++) // Each sub-dataset boundary
+                if (i != (nFold - 1))
                 {
-                    EgoNetwork egoNetWork = egoNetworkList[(long)egoIDList[j]];
-                    dataSets[i].addEgoNetwork(egoNetWork);
+                    for (int j = i * boundary; j < (i + 1) * boundary; j++) // Each sub-dataset boundary
+                    {
+                        EgoNetwork egoNetWork = egoNetworkList[(long)egoIDList[j]];
+                        dataSets[i].addEgoNetwork(egoNetWork);
+                    }
+                }
+                else // Incase: Last sub-dataset
+                {
+                    for (int j = i * boundary; j < egoNetworkList.Count; j++) 
+                    {
+                        EgoNetwork egoNetWork = egoNetworkList[(long)egoIDList[j]];
+                        dataSets[i].addEgoNetwork(egoNetWork);
+                    }
                 }
             }
         }

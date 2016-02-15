@@ -15,9 +15,8 @@ namespace EgoNetworkAnalysis
         static void Main(string[] args)
         {
             Console.WriteLine("Ego-Network Analysis Start (" + DateTime.Now.ToString() + ")\n");
-            Stopwatch programStopwatch = Stopwatch.StartNew();
 
-            // Commandline arguments
+            // Commandline Arguments
             string dirPath = args[0] + Path.DirectorySeparatorChar;
 
             // DB(.sqlite) List
@@ -25,8 +24,10 @@ namespace EgoNetworkAnalysis
 
             // Outfile Setting
             string outFilePath = args[0] + Path.DirectorySeparatorChar + "EgoNetwork_Analysis.txt";
+            if (File.Exists(outFilePath))
+                File.Delete(outFilePath);
 
-            // <Ego, dbPath> Sorted Order(Ascending)
+            // <Ego, dbPath> Sorted by Ego ID(Ascending)
             SortedDictionary<long, string> egoList = new SortedDictionary<long, string>();
             foreach(string dbPath in dbCollection)
             {
@@ -41,14 +42,13 @@ namespace EgoNetworkAnalysis
                 string dbPath = kvp.Value;
                 SQLiteAdapter dbAdapter = new SQLiteAdapter(dbPath);
                 Console.WriteLine(egoID + " Started");
+
                 // Configure Ego-Network 
                 EgoNetwork egoNetwork = new EgoNetwork(egoID);
                 // Construct Ego-Network Information              
                 egoNetwork.setNetworkInformation(dbAdapter);
                 // Anaylize Ego-Network
-                //egoNetwork.startNetworkAnalysis();
-                // Output Analysis Result
-                //egoNetwork.outputNetworkAnalysisResult(outFilePath);
+                egoNetwork.startNetworkAnalysis(dbAdapter, outFilePath);
 
                 dbAdapter.closeDB(); 
             }

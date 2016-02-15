@@ -44,6 +44,16 @@ namespace RecommenderClassification
             return correctCount / egoCount;
         }
 
+        public double MAP()
+        {
+            double sumOfAP = 0.0;
+            foreach (EgoNetwork egoNetwork in this.egoNetworkList)
+            {
+                sumOfAP += egoNetwork.rwrResults[egoNetwork.predictLabel];
+            }
+
+            return sumOfAP / this.egoNetworkList.Count;
+        }
         /*************************** Other Methods *******************************/
         public void logClassificationResult(string classificationFilePath)
         {
