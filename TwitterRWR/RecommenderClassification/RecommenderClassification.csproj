@@ -65,9 +65,9 @@
     <Compile Include="DataPreprocess.cs" />
     <Compile Include="DataSet.cs" />
     <Compile Include="EgoNetwork.cs" />
-    <Compile Include="Program.cs" />
+    <None Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="Temporary\Program.cs" />
+    <Compile Include="Temporary\Program.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

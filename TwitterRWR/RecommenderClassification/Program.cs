@@ -13,10 +13,10 @@ namespace RecommenderClassification
         // Decision Attirbute List
         public static string[] candidateColumns = { "AVERAGE_SIMILARITY", "FRIEND_RATIO", "AVERAGE_CO_FOLLOWEE", "CO_FOLLOWEE_COUNT",
                                                     "LIKE_FRIEND_PUBLISH_RATIO", "AVERAGE_MENTION_COUNT", "LIKE_MENTION_RATIO", "PUBLISH_MENTION_RATIO",
-                                                    "CO_LIKE_WITH_FRIEND_RATIO",
+                                                    "LIKE_TO_PUBLISH_RATIO", "LIKE_RETWEET_QUOTE_RATIO", "LIKE_FAVORITE_RATIO", "CO_LIKE_WITH_FRIEND_RATIO",
                                                     "FOLLOWEE_COUNT"};
 
-        // Commandline Argument: C:\Users\dilet\Desktop\TwitterDB\ C:\Users\dilet\Desktop\TwitterDB\EgoNetwork_Analysis.txt 1024 5 16
+        // Commandline Argument: C:\Users\dilet\Desktop\TwitterDB C:\Users\dilet\Desktop\TwitterDB\EgoNetwork_Analysis.txt 8192 5 16
         static void Main(string[] args)
         {
             string dirPath = args[0];
