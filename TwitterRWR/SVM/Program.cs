@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Accord.Statistics.Kernels;
+using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,17 +7,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RecommenderClassification
+namespace SupportVectorMachine
 {
     class Program
     {
-        // Decision Attirbute List
+        // Features consisting of input vectors for 'SVM' learning
         public static string[] candidateColumns = { "AVERAGE_SIMILARITY", "FRIEND_RATIO", "AVERAGE_CO_FOLLOWEE", "CO_FOLLOWEE_COUNT",
                                                     "LIKE_FRIEND_PUBLISH_RATIO", "AVERAGE_MENTION_COUNT", "LIKE_MENTION_RATIO", "PUBLISH_MENTION_RATIO",
                                                     "LIKE_TO_PUBLISH_RATIO", "LIKE_RETWEET_QUOTE_RATIO", "LIKE_FAVORITE_RATIO", "CO_LIKE_WITH_FRIEND_RATIO",
                                                     "FOLLOWEE_COUNT"};
 
         // Commandline Argument: C:\Users\dilet\Desktop\TwitterDB C:\Users\dilet\Desktop\TwitterDB\EgoNetwork_Analysis.txt 8192 5 16
+        [MTAThread]
         static void Main(string[] args)
         {
             string dirPath = args[0];
@@ -48,7 +50,9 @@ namespace RecommenderClassification
                         for (int i = 0; i < combinationBitArray.Length; i++)
                         {
                             if (combinationBitArray[i] == 1)
+                            {
                                 columnList.Add(i, candidateColumns[i]);
+                            }
                         }
 
                         // DataPreprocess: Split K-Fold DataSets
@@ -67,11 +71,12 @@ namespace RecommenderClassification
                             trainSet = (DataSet)dataSets.Item1;
                             testSet = (DataSet)dataSets.Item2;
 
-                            // Decision Treee Configuration, Learning & Prediction
-                            Classification classification = new Classification(columnList, classCount);
-                            learningError = classification.learnDecisionTreeModel(trainSet);
+                            // SVM(Support Vector Machine) Configuration: Gaussian Kernel
+                            SVM classifier = new SVM(columnList, new Polynomial((int)Math.Ceiling(classCount * 1.5)), classCount);
+                            // Learning & Prediction
+                            learningError = classifier.learning(trainSet);                           
                             sumOfLearningError += learningError;
-                            classification.prediction(testSet);
+                            classifier.prediction(testSet);
 
                             // Correct Recommender Prdicted Label Ratio
                             correctPredictRatio = testSet.validation();
@@ -79,13 +84,16 @@ namespace RecommenderClassification
 
                             // Get MAP of TrainSet
                             sumOfMAP += trainSet.MAP();
-                        }
+                            
+                        }                       
                         double averageMAP = sumOfMAP / nFold;
                         double averageCorrectPredictRatio = sumOfCorrectPredictRatio / nFold;
-                        double averageLearning = sumOfLearningError / nFold;
+                        double averageLearningError = sumOfLearningError / nFold;
 
-                        classificationLogger.WriteLine("{0}\t{1:F15}\t{2:F15}\t{3:F15}",
-                            combination, averageMAP, averageCorrectPredictRatio, 1.0 - averageLearning);
+                        Console.WriteLine("Combination: " + combination);
+                        Console.WriteLine("MAP: " + averageMAP);
+                        classificationLogger.WriteLine("{0}\t{1}\t{2:F15}\t{3:F15}\t{4:F15}",
+                            combination, s.PadLeft(padding, '0'), averageMAP, averageCorrectPredictRatio, 1.0 - averageLearningError);                       
                     }
                 }
             }
